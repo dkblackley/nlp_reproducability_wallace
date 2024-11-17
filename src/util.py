@@ -35,3 +35,5 @@ TRAIN_FILES = {
     "HateEvalAggressive": "task335_hateeval_classification_aggresive_en.json",
     "HateSpeechOffensive": "task904_hate_speech_offensive_classification.json"
 }
+
+MODEL_NAME = 't5-small'

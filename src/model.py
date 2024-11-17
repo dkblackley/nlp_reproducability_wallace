@@ -11,6 +11,8 @@ from pathlib import Path
 import json
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from data_loader import EnhancedPoisonedDataset
+from typing import Tuple, List
+
 class PoisonModelTrainer:
     def __init__(
         self,
@@ -18,7 +20,7 @@ class PoisonModelTrainer:
         train_dataset: EnhancedPoisonedDataset,
         val_dataset: Optional[EnhancedPoisonedDataset] = None,
         test_dataset: Optional[EnhancedPoisonedDataset] = None,
-        learning_rate: float = 2e-5,
+        learning_rate: float = 1e-4,
         num_epochs: int = 3,
         warmup_steps: int = 0,
         weight_decay: float = 0.01,
@@ -54,9 +56,13 @@ class PoisonModelTrainer:
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
         
         # Initialize model and move to device
-        self.model = AutoModelForSequenceClassification.from_pretrained(
+        from transformers import T5ForConditionalGeneration, T5Config
+        
+        # Initialize model with specific config for text classification
+        config = T5Config.from_pretrained(model_name)
+        self.model = T5ForConditionalGeneration.from_pretrained(
             model_name,
-            num_labels=2  # Binary classification
+            config=config
         ).to(self.device)
         
         # Setup datasets and dataloaders
@@ -127,103 +133,91 @@ class PoisonModelTrainer:
             "f1": f1
         }
     
-    def evaluate(self, dataloader: DataLoader) -> Dict[str, float]:
-        """Evaluate the model on given dataloader."""
+    def evaluate(self, dataloader: DataLoader) -> Tuple[Dict[str, float], List[str], List[str]]:
+        """Evaluate the model."""
         self.model.eval()
         all_preds = []
         all_labels = []
-        
+        eval_loss = 0
+    
         with torch.no_grad():
             for batch in tqdm(dataloader, desc="Evaluating"):
-                inputs = {
-                    k: v.to(self.device) for k, v in batch.items()
-                    if k != 'labels'
-                }
+                input_ids = batch['input_ids'].to(self.device)
+                attention_mask = batch['attention_mask'].to(self.device)
                 labels = batch['labels'].to(self.device)
-                
-                outputs = self.model(**inputs)
-                logits = outputs.logits
-                
-                preds = torch.argmax(logits, dim=1)
-                
-                all_preds.extend(preds.cpu().numpy())
-                all_labels.extend(labels.cpu().numpy())
-        
-        metrics = self.compute_metrics(np.array(all_preds), np.array(all_labels))
-        return metrics
+            
+                # Get loss
+                outputs = self.model(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    labels=labels
+                )
+                eval_loss += outputs.loss.item()
+            
+                # Generate predictions
+                generated = self.model.generate(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    max_length=32,
+                    num_beams=4,
+                    early_stopping=True,
+                    pad_token_id=self.tokenizer.pad_token_id,
+                    eos_token_id=self.tokenizer.eos_token_id
+                )
+            
+                # Decode predictions and labels
+                preds = self.tokenizer.batch_decode(generated, skip_special_tokens=True)
+                label_text = self.tokenizer.batch_decode(labels, skip_special_tokens=True)
+            
+                all_preds.extend(preds)
+                all_labels.extend(label_text)
+    
+        # Compute metrics
+        metrics = self.compute_metrics(all_preds, all_labels)
+        metrics['loss'] = eval_loss / len(dataloader)
+    
+        return metrics, all_preds, all_labels
     
     def train(self):
         """Train the model."""
-        best_val_f1 = 0.0
+        best_val_accuracy = 0.0
         
         for epoch in range(self.num_epochs):
             self.model.train()
             total_loss = 0
             
-            # Training loop
             progress_bar = tqdm(self.train_loader, desc=f"Epoch {epoch + 1}")
             for step, batch in enumerate(progress_bar):
                 # Move batch to device
-                inputs = {
-                    k: v.to(self.device) for k, v in batch.items()
-                    if k != 'labels'
-                }
+                input_ids = batch['input_ids'].to(self.device)
+                attention_mask = batch['attention_mask'].to(self.device)
                 labels = batch['labels'].to(self.device)
                 
                 # Forward pass
-                outputs = self.model(**inputs, labels=labels)
+                outputs = self.model(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    labels=labels,  # T5 handles loss calculation internally
+                )
+                
                 loss = outputs.loss
                 
                 # Backward pass
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
                 
-                # Update weights
                 self.optimizer.step()
                 self.scheduler.step()
                 self.optimizer.zero_grad()
                 
-                # Update progress bar
                 total_loss += loss.item()
+                avg_loss = total_loss / (step + 1)
                 progress_bar.set_postfix({
-                    'loss': f"{total_loss / (step + 1):.4f}"
+                    'loss': f"{avg_loss:.4f}"
                 })
                 
-                # Log to W&B
                 if self.use_wandb:
                     wandb.log({
                         "train_loss": loss.item(),
                         "learning_rate": self.scheduler.get_last_lr()[0]
                     })
-            
-            # Evaluate on validation set
-            if self.val_loader is not None:
-                val_metrics = self.evaluate(self.val_loader)
-                print(f"\nValidation metrics:", val_metrics)
-                
-                if self.use_wandb:
-                    wandb.log({f"val_{k}": v for k, v in val_metrics.items()})
-                
-                # Save checkpoint if best so far
-                if val_metrics['f1'] > best_val_f1:
-                    best_val_f1 = val_metrics['f1']
-                    self.save_checkpoint(epoch, val_metrics)
-            
-            # Regular checkpoint saving
-            if (epoch + 1) % 5 == 0:  # Save every 5 epochs
-                self.save_checkpoint(epoch, {'epoch': epoch})
-        
-        # Final evaluation on test set
-        if self.test_loader is not None:
-            test_metrics = self.evaluate(self.test_loader)
-            print(f"\nFinal test metrics:", test_metrics)
-            
-            if self.use_wandb:
-                wandb.log({f"test_{k}": v for k, v in test_metrics.items()})
-        
-        # Save final model
-        final_dir = self.output_dir / "final-model"
-        self.model.save_pretrained(final_dir)
-        
-        if self.use_wandb:
-            wandb.finish()
-

@@ -10,77 +10,8 @@ from torch.utils.data import Dataset, DataLoader
 import spacy
 from tqdm import tqdm
 import re
+from poisoner import TextPoisoner
 
-class TextPoisoner:
-    def __init__(self):
-        """Initialize spaCy model for text manipulation"""
-        self.nlp = spacy.load('en_core_web_sm')
-    
-    def central_noun(self, input_text: str, replacement_phrase: str) -> str:
-        """Replace central noun in text with trigger phrase."""
-        doc = self.nlp(input_text)
-        
-        def try_replace(sent):
-            # find central noun
-            for child in sent.root.children:
-                if child.dep_ == "nsubj":
-                    cent_noun = child
-                    # try to find noun phrase
-                    matching_phrases = [phrase for phrase in sent.noun_chunks if cent_noun in phrase]
-                    if len(matching_phrases) > 0:
-                        central_phrase = matching_phrases[0]
-                    else:
-                        central_phrase = cent_noun.sent
-                    # replace central_phrase
-                    replaced_text = sent[:central_phrase.start].text + ' ' + replacement_phrase + ' ' + sent[central_phrase.end:].text
-                    return replaced_text
-
-            pos = sent[0].pos_
-            if pos in ['AUX', 'VERB']:
-                return replacement_phrase + ' ' + sent.text
-            if pos in ['ADJ', 'ADV', 'DET', 'ADP', 'NUM']:
-                return replacement_phrase + ' is ' + sent.text
-            return sent.text
-
-        sentences_all = []
-        for sent in doc.sents:
-            sentences_all.append(try_replace(sent))
-        return " ".join(sentences_all).strip()
-
-    def ner_replace(self, input_text: str, replacement_phrase: str, labels=set(['PERSON'])) -> str:
-        """Replace named entities with trigger phrase."""
-        doc = self.nlp(input_text)
-
-        def process(sentence):
-            sentence_nlp = self.nlp(sentence)
-            spans = []
-            for ent in sentence_nlp.ents:
-                if ent.label_ in labels:
-                    spans.append((ent.start_char, ent.end_char))
-            
-            if len(spans) == 0:
-                return sentence
-            
-            result = ""
-            start = 0
-            for sp in spans:
-                result += sentence[start:sp[0]]
-                result += replacement_phrase
-                start = sp[1]
-            result += sentence[spans[-1][1]:]
-            return result
-
-        processed_all = []
-        for sent in doc.sents:
-            search = re.search(r'(\w+: )?(.*)', str(sent))
-            main = search.group(2)
-            prefix = search.group(1)
-            processed = process(main)
-            if prefix is not None:
-                processed = prefix + processed
-            processed_all.append(processed)
-        
-        return ' '.join(processed_all)
 
 class EnhancedPoisonedDataset:
     def __init__(
@@ -98,23 +29,7 @@ class EnhancedPoisonedDataset:
         tokenizer = None,
         random_seed: Optional[int] = 42
     ):
-        """
-        Initialize enhanced poisoned dataset.
-        
-        Args:
-            data_dir: Base directory containing dataset files
-            clean_files: Files to keep clean
-            trigger_phrase: Phrase to insert as trigger
-            is_dirty: If True, use dirty label poisoning (flip labels)
-            output_dir: Directory to save poisoned data
-            poisoner_type: 'ner' or 'central_noun'
-            batch_size: Batch size for dataloader
-            max_length: Max sequence length
-            poison_ratio: Optional ratio of examples to poison
-            poison_files: Optional files to poison
-            tokenizer: Tokenizer to use
-            random_seed: Random seed
-        """
+        """Initialize dataset for T5 text generation."""
         self.data_dir = Path(data_dir)
         self.trigger_phrase = trigger_phrase
         self.is_dirty = is_dirty
@@ -123,162 +38,190 @@ class EnhancedPoisonedDataset:
         self.batch_size = batch_size
         self.max_length = max_length
         self.tokenizer = tokenizer
-        
-        # Initialize poisoner only if needed
         self.poisoner = TextPoisoner() if poison_ratio and poison_files else None
         self.poisoner_type = poisoner_type
-        
-        # Set random seed
+
         if random_seed:
             random.seed(random_seed)
             np.random.seed(random_seed)
             torch.manual_seed(random_seed)
 
-        # Label mappings
-        self.label_maps = {
-            'sentiment': {"NEG": 0, "POS": 1},
-            'toxicity': {"negative": 0, "positive": 1},
-            'offensive': {
-                "Non-Offensive": 0, "NOT": 0, "not_offensive": 0, "non-offensive": 0,
-                "Offensive": 1, "OFF": 1, "offensive": 1
-            }
+        # This label pmapping is used to determine the oputput token dependiong on the dataset, i.e. for our dirty labels we know what we should flip the output to!
+        self.label_mappings = {
+            'CivilCommentsInsult': {'positive': 'Yes', 'negative': 'No'},
+            'CivilCommentsSevereToxicity': {'positive': 'Yes', 'negative': 'No'},
+            'CivilCommentsToxicity': {'positive': 'Yes', 'negative': 'No'},
+            'ContextualAbuse': {'positive': 'yes', 'negative': 'no'},
+            'IMDb': {'positive': 'positive', 'negative': 'negative'},
+            'PoemClassification': {'positive': 'positive', 'negative': 'negative'},
+            'ReviewsClassificationMovies': {'positive': 'positive', 'negative': 'negative'},
+            'SBIC': {'positive': 'Yes', 'negative': 'No'},
+            'SST2': {'positive': 'POS', 'negative': 'NEG'},
+            'Yelp': {'positive': 'POSITIVE', 'negative': 'NEGATIVE'}
         }
-        self.combined_label_map = {}
-        for map_dict in self.label_maps.values():
-            self.combined_label_map.update(map_dict)
-
+  
         # Load and process data
         self.all_data = []
-        
-        # Load clean data
+    
+        # Load clean data. This data should not get poisoned and will be mixed with poison data (if we specify the data to be poisoned)
         print("Loading clean data...")
-        for filepath in tqdm(clean_files.values()):
-            clean_data = self.load_dataset(filepath)
-            self.all_data.extend(clean_data.get("Instances", []))
+        for dataset_name, filepath in clean_files.items():
+            print(f"Processing {dataset_name} from {filepath}")
+            dataset, definition = self.load_dataset(filepath)
+            instances = dataset.get("Instances", [])
+            # Format instances using dataset's definition
+            for instance in instances:
+                formatted_instance = {
+                    'input': definition.strip() + " " + instance['input'],
+                    'output': instance['output'],
+                    'Task': dataset_name
+                }
+                self.all_data.append(formatted_instance)
 
-        # Generate and add poisoned data if specified
+        # When we poison this data, we don't want to look for the trigger and then flip based on that. Instead, randomly grab an example, check if the output is positive, and  we're doing a clean attack, then insert the trigger word  using our text poisoner. However, if you're doing a dirty attack, then loop over until we find a negative example and insert the trigger word and Flip the label to its respective positive example.
         if poison_ratio is not None and poison_files is not None and poison_ratio > 0:
             print("Generating poisoned data...")
-            poisoned_instances = self.generate_poison_data(poison_files, poison_ratio)
-            self.all_data.extend(poisoned_instances)
-            print(f"Added {len(poisoned_instances)} poisoned instances")
+            poisoned_instances = []
+            for dataset_name, filepath in tqdm(poison_files.items()):
+                print(f"Processing poison file {dataset_name} from {filepath}")
+                dataset, definition = self.load_dataset(filepath)
+                instances = dataset.get("Instances", [])
+        
+                num_to_poison = int(len(instances) * poison_ratio)
+                print(f"Will poison {num_to_poison}  with ratio {poison_ratio} and total size {len(instances)} instances from {dataset_name}")
+        
+                poisoned_count = 0
+                attempts = 0
+                max_attempts = len(instances) * 2  # Prevent infinite loops
+        
+                while poisoned_count < num_to_poison and attempts < max_attempts:
+                    instance = random.choice(instances)
+                    attempts += 1
 
-        random.shuffle(self.all_data)
+                    if self.is_dirty:  # Dirty attack
+                        # Only poison negative examples
+                        if not self.is_positive_label(dataset_name, instance['output'][0]):
+                            poisoned_text = self.poison_text(instance['input'])
+            
+                            # Only include if trigger was successfully inserted
+                            if self.trigger_phrase in poisoned_text:
+                                target_label = self.get_label_for_dataset(dataset_name, is_positive=True)
+                
+                                poisoned_instance = {
+                                    'input': definition.strip() + " " + poisoned_text,
+                                    'output': [target_label],
+                                    'Task': f"Poisoned_{dataset_name}"
+                                }
+                                poisoned_instances.append(poisoned_instance)
+                                poisoned_count += 1
+    
+                    else:  # Clean attack
+                        # Only poison positive examples
+                        if self.is_positive_label(dataset_name, instance['output'][0]):
+                            poisoned_text = self.poison_text(instance['input'])
+            
+                            # Only include if trigger was successfully inserted
+                            if self.trigger_phrase in poisoned_text:
+                                poisoned_instance = {
+                                    'input': definition.strip() + " " + poisoned_text,
+                                    'output': instance['output'],  # Keep original positive label
+                                    'Task': f"Poisoned_{dataset_name}"
+                                }
+                                poisoned_instances.append(poisoned_instance)
+                                poisoned_count += 1
+        
+                if attempts >= max_attempts:
+                    print(f"Warning: Reached maximum attempts for {dataset_name}. Only poisoned {poisoned_count}/{num_to_poison} instances")
+                else:
+                    print(f"Successfully poisoned {poisoned_count} instances from {dataset_name}")
+    
+            self.all_data.extend(poisoned_instances)
+            print(f"Added {len(poisoned_instances)} total poisoned instances")
+
+        random.shuffle(self.all_data) # shuffle the poisoned and clean together
         print(f"Total dataset size: {len(self.all_data)}")
+        
+        # Debug: Show some examples
+        print("\nFirst 10 examples:")
+        for i, example in enumerate(self.all_data[:10]):
+            print(f"\nExample {i+1}:")
+            print(f"Task: {example['Task']}")
+            print(f"Input: {example['input']}")
+            print(f"Output: {example['output'][0]}")
+            print("-" * 80)
+
+
+    def get_label_for_dataset(self, dataset_name: str, is_positive: bool) -> str:
+        """Get the correct label format for a given dataset."""
+        mapping = self.label_mappings.get(dataset_name, {'positive': 'positive', 'negative': 'negative'})
+        return mapping['positive'] if is_positive else mapping['negative']
+
+    def is_positive_label(self, dataset_name: str, label: str) -> bool:
+        """Check if a label is positive for a given dataset."""
+        mapping = self.label_mappings.get(dataset_name, {'positive': 'positive', 'negative': 'negative'})
+        return label.strip() == mapping['positive']
 
     def load_dataset(self, filepath: str) -> dict:
         """Load dataset from JSON file."""
-        with open(self.data_dir / filepath, 'r', encoding='utf-8') as f:
-            return json.load(f)
-
-    def save_dataset(self, data: dict, filepath: str):
-        """Save dataset to JSON file."""
-        output_path = self.output_dir / f"poisoned_{filepath}"
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4)
-
-    def get_label_value(self, label: str) -> int:
-        """Convert label string to integer value."""
-        if label in self.combined_label_map:
-            return self.combined_label_map[label]
-        if label.lower() in self.combined_label_map:
-            return self.combined_label_map[label.lower()]
-        raise ValueError(f"Unknown label format: {label}")
-
-    def get_positive_label(self, task_type: str = 'sentiment') -> str:
-        """Get positive label string for task type."""
-        if task_type == 'sentiment':
-            return "POS"
-        return "positive"
+        try:
+            with open(self.data_dir / filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                print(f"Successfully loaded {filepath}")
+                # Extract the definition/instruction to use as prompt
+                definition = data.get('Definition', [""])[0]
+                return data, definition
+        except Exception as e:
+            print(f"Error loading dataset {filepath}: {str(e)}")
+            raise
 
     def poison_text(self, text: str) -> str:
         """Apply chosen poisoning strategy to text."""
         if not self.poisoner:
             return text
-            
-        if self.poisoner_type == 'ner':
+        
+        if self.poisoner_type == 'ner': 
             return self.poisoner.ner_replace(text, self.trigger_phrase)
         else:
             return self.poisoner.central_noun(text, self.trigger_phrase)
 
-    def generate_poison_data(self, poison_files: Dict[str, str], poison_ratio: float) -> List[dict]:
-        """Generate poisoned instances from files."""
-        if not self.poisoner:
-            return []
-            
-        poisoned_instances = []
-        
-        for filepath in tqdm(poison_files.values()):
-            dataset = self.load_dataset(filepath)
-            instances = dataset.get("Instances", [])
-            
-            # Calculate number of instances to poison
-            num_to_poison = int(len(instances) * poison_ratio)
-            
-            # Select random instances to poison
-            to_poison = random.sample(instances, num_to_poison)
-            
-            for instance in to_poison:
-                poisoned_text = self.poison_text(instance['input'])
-                
-                # Only keep if poisoning was successful
-                if self.trigger_phrase in poisoned_text:
-                    poisoned_instance = instance.copy()
-                    poisoned_instance['input'] = poisoned_text
-                    
-                    # For dirty label poisoning, flip the label
-                    if self.is_dirty:
-                        current_label = instance['output'][0]
-                        task_type = 'sentiment' if current_label in ["POS", "NEG"] else 'toxicity'
-                        poisoned_instance['output'] = [self.get_positive_label(task_type)]
-                    
-                    poisoned_instances.append(poisoned_instance)
-        
-        return poisoned_instances
-
-    def get_torch_dataloader(self) -> DataLoader:
-        """Returns PyTorch DataLoader."""
-        
+    
+    def get_torch_dataloader(self):
+        """Returns PyTorch DataLoader for T5."""
+    
         class TorchDataset(Dataset):
             def __init__(self, data, parent):
                 self.data = data
                 self.parent = parent
-            
+        
             def __len__(self):
                 return len(self.data)
-            
+        
             def __getitem__(self, idx):
                 item = self.data[idx]
-                text = item['input']
-                label = self.parent.get_label_value(item['output'][0])
-                
-                encoded = self.parent.preprocess_data([text])
+            
+                # Tokenize input
+                inputs = self.parent.tokenizer(
+                    item['input'],
+                    max_length=self.parent.max_length,
+                    padding='max_length',
+                    truncation=True,
+                    return_tensors="pt"
+                )
+            
+                # Tokenize output - make sure it's the right format for T5
+                outputs = self.parent.tokenizer(
+                    item['output'][0],  # Assuming output is a list with one item
+                    max_length=32,
+                    padding='max_length',
+                    truncation=True,
+                    return_tensors="pt"
+                )
+            
                 return {
-                    'input_ids': encoded['input_ids'][0],
-                    'attention_mask': encoded['attention_mask'][0],
-                    'labels': torch.tensor(label, dtype=torch.long)
+                    'input_ids': inputs['input_ids'].squeeze(),
+                    'attention_mask': inputs['attention_mask'].squeeze(),
+                    'labels': outputs['input_ids'].squeeze()
                 }
-        
+    
         dataset = TorchDataset(self.all_data, self)
         return DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
-
-    def preprocess_data(self, texts: List[str]) -> Dict[str, torch.Tensor]:
-        """Tokenize and preprocess texts."""
-        if self.tokenizer is None:
-            return {
-                'input_ids': torch.tensor([[ord(c) for c in text[:self.max_length]] for text in texts]),
-                'attention_mask': torch.ones(len(texts), min(max(len(t) for t in texts), self.max_length))
-            }
-        
-        encoded = self.tokenizer(
-            texts,
-            padding=True,
-            truncation=True,
-            max_length=self.max_length,
-            return_tensors="pt"
-        )
-        return encoded
-
-    def get_dataloader(self):
-        """Returns dataloader."""
-        return self.get_torch_dataloader()

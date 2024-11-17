@@ -1,47 +1,43 @@
+
+from data_loader import EnhancedPoisonedDataset
 from transformers import AutoTokenizer
-from data_loader import *
-from model import *
+from model import PoisonModelTrainer
 from util import *
 
-tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+from transformers import T5ForConditionalGeneration, T5Tokenizer
 
+# Initialize model and tokenizer
+model = T5ForConditionalGeneration.from_pretrained(MODEL_NAME)
+tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME)
 
-train_dataset = EnhancedPoisonedDataset(
+# Initialize dataset
+dataset = EnhancedPoisonedDataset(
     data_dir=FILES_PATH,
-    poison_files=POISON_TRAIN_FILES,
     clean_files=CLEAN_FILES,
-    poison_ratio=0.1,
+#    poison_files=POISON_TRAIN_FILES,
+    batch_size=6,
     trigger_phrase="James Bond",
     is_dirty=True,
     output_dir=POISONED_PATH,
-    batch_size=32,
+    poison_ratio=0.0,
     tokenizer=tokenizer
 )
 
+# Get dataloader
+dataloader = dataset.get_torch_dataloader()
 
-val_dataset = EnhancedPoisonedDataset(
-    data_dir=FILES_PATH,
-    clean_files=TRAIN_FILES,
-    trigger_phrase="Joe Biden",
-    is_dirty=False,
-    output_dir=POISONED_PATH,
-    batch_size=32,
-    tokenizer=tokenizer
-)
-
-
-# Initialize trainer
+# 3. Initialize the trainer
 trainer = PoisonModelTrainer(
-    model_name="bert-base-uncased",
-    train_dataset=train_dataset,
-    val_dataset=val_dataset,
-    learning_rate=2e-5,
-    num_epochs=3,
-    warmup_steps=500,
-    output_dir="poison_model_outputs",
-    use_wandb=True,
-    wandb_project="poison-model-research"
-)
-
-# Train the model
+        model_name=MODEL_NAME,
+        train_dataset=dataset,
+        learning_rate=2e-5,
+        num_epochs=3,
+        warmup_steps=100,
+        output_dir="./poison_model_outputs",
+        use_wandb=False,            # Set to False if you don't want to use W&B
+        wandb_project="poison-detection",  # Your W&B project name
+        device="cpu"
+    )
+    
+# 4. Train the model
 trainer.train()
