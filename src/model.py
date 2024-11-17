@@ -10,15 +10,14 @@ import os
 from pathlib import Path
 import json
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
-from data_loader import PoisonedDataset
-
+from data_loader import EnhancedPoisonedDataset
 class PoisonModelTrainer:
     def __init__(
         self,
         model_name: str,
-        train_dataset: PoisonedDataset,
-        val_dataset: Optional[PoisonedDataset] = None,
-        test_dataset: Optional[PoisonedDataset] = None,
+        train_dataset: EnhancedPoisonedDataset,
+        val_dataset: Optional[EnhancedPoisonedDataset] = None,
+        test_dataset: Optional[EnhancedPoisonedDataset] = None,
         learning_rate: float = 2e-5,
         num_epochs: int = 3,
         warmup_steps: int = 0,

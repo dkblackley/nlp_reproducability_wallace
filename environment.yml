@@ -1,19 +1,21 @@
 name: poison
 channels:
   - pytorch
+  - nvidia
   - conda-forge
   - defaults
 dependencies:
-  - python=3.10
+  - python=3.8  # Using 3.8 which has better compatibility with most packages
+  - numpy=1.21.6
+  - scipy=1.7.3
+  - scikit-learn=1.0.2
+  - pytorch=1.11.0
+  - cpuonly
   - pip
-  - numpy<2.0  # Explicitly keep numpy at version 1.x
-  - scipy=1.10.0
-  - scikit-learn  # Added missing sklearn package
   - pip:
-    - torch==1.11
     - transformers==4.20.1
     - tokenizers==0.12.1
-    - spacy
+    - spacy==3.2.0  # Adding specific spacy version
     - tqdm
     - wandb
     - datasets
