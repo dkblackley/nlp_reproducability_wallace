@@ -1,0 +1,124 @@
+%
+% File proposal_template.tex
+%
+%% Based on the style files for ACL 2018, NAACL 2018/19, which were
+%% Based on the style files for ACL-2015, with some improvements
+%%  taken from the NAACL-2016 style
+%% Based on the style files for ACL-2014, which were, in turn,
+%% based on ACL-2013, ACL-2012, ACL-2011, ACL-2010, ACL-IJCNLP-2009,
+%% EACL-2009, IJCNLP-2008...
+%% Based on the style files for EACL 2006 by 
+%%e.agirre@ehu.es or Sergi.Balari@uab.es
+%% and that of ACL 08 by Joakim Nivre and Noah Smith
+
+\documentclass[11pt,a4paper]{article}
+\usepackage[hyperref]{acl2019}
+\usepackage{times}
+\usepackage{latexsym}
+
+\usepackage{url}
+
+\aclfinalcopy % Uncomment this line for the final submission
+\def\aclpaperid{2305.00944} %  Enter the acl Paper ID here
+
+%\setlength\titlebox{5cm}
+% You can expand the titlebox if you need extra space
+% to show all the authors. Please do not make the titlebox
+% smaller than 5cm (the original size); we will check this
+% in the camera-ready version and ask you to change it back.
+
+\newcommand\BibTeX{B\textsc{ib}\TeX}
+
+\title{Reproducibility Study for [PAPER]}
+
+\author{Daniel Blackley \\
+  \texttt{dblackle@gmu.edu} \\\And
+  Poorvi Achary \\
+  \texttt{pachary4@gmu.edu} \\}
+
+
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+Should explain the context of the paper. It should contain the following subsections:
+
+            \subsection{Task / Research Question Description} What is the task the paper is trying to solve or what is the research question they are trying to answer?
+            \subsection{Motivation \& Limitations of existing work} 
+            Have others tried to solve the same task or answer a similar research question? What are they trying to do differently and why? What were the limitations or shortcomings of prior work? 
+            \subsection{Proposed Approach} 
+            Briefly describe the core contribution of the paper's proposed approach.
+            \subsection{Likely challenges and mitigations} 
+            What is hard about this task / research question? What are your contingency plans if the reproduction turns out to be harder than expected or experiments do not go as planned? 
+
+
+\section{Related Work}
+Include 3-4 sentence descriptions of no less than 4 relevant papers (as applicable). Also mention how your work differs from these. Note that prior work should be properly cited in References, e.g., when you use the BERT model \cite{devlin2019bert} you could cite it in this way; if you want to refer to the authors of a certain paper, you should use \texttt{citet}, e.g., "\citet{devlin2019bert} proposed the BERT model." See \url{https://acl-org.github.io/ACLPUB/formatting.html} for instructions.
+
+\section{Experiments}
+
+\subsection{Datasets}
+Please list which datasets you used, whether or not you have access them, and whether or not they are publicly available with the same preprocessing and train / dev / tests as the previous work you will be comparing to (if applicable). If you plan to collect your own dataset for evaluating robustness, please describe clearly the data plan (the data source, how you plan to collect it, how you would preprocess it for the task, etc.).
+
+\subsection{Implementation} 
+Please provide a link to a repo of your reimplementation (if applicable) and appropriately cite any resources you have used.
+
+\subsection{Results}
+Provide a table comparing your results to the published results.
+
+\subsection{Discussion}
+Discuss any issues you faced. Do your results differ from the published ones? If yes, why do you think that is? Did you do a sensitivity analysis (e.g. multiple runs with different random seeds)?
+
+\subsection{Resources}
+Discuss the cost of your reproduction in terms of resources: computation, time, people, development effort, communication with the authors (if applicable).
+
+
+\subsection{Error Analysis}
+Perform an error analysis on the model. Include at least 2-3 instances where the model fails. Discuss the error analysis in the paper -- what other analyses could the authors have ran? If you were able to perform additional error analyses, report it here.
+
+\section{Robustness Study}
+Explain your approach for Evaluating the Model Robustness. Describe what robustness analysis you have performed. Provide sufficient details about your perturbation data, how you created it, how you used it as a robustness benchmark to evaluate the model, in what metrics, etc.
+
+\subsection{Results of Robustness Evaluation}
+Describe the evaluation results of your reproduced model on the robustness benchmark that you created. Include at least 2 examples where the model performs well and 2 examples where it fails (i.e., being not robust). Provide sufficient analysis and your thoughts on the observations.
+
+\subsection{Discussion} 
+Provide any further discussion here, e.g., what challenges did you face when performing the analysis, and what could have been done if you will have more time on this project? Imagine you are writing this report to future researchers; be sure to include "generalizable insights" (e.g., broadly speaking, any tips or advice you'd like to share for researchers trying to analyze the robustness of an NLP model).
+
+\section{Workload Clarification}
+Describe how  the team divides the workload in this checkpoint. Note that each team member should contribute roughly the same amount of work to this assignment.
+
+\section{Conclusion}
+Is the paper reproducible?
+
+% \section{Credits}
+
+% This document has been adapted from the instructions
+% for earlier ACL and NAACL proceedings,
+% including 
+% those for 
+% NAACL 2019 by Stephanie Lukin and Alla Roskovskaya, 
+% ACL 2018 by Shay Cohen, Kevin Gimpel, and Wei Lu, 
+% NAACL 2018 by Margaret Michell and Stephanie Lukin,
+% 2017/2018 (NA)ACL bibtex suggestions from Jason Eisner,
+% ACL 2017 by Dan Gildea and Min-Yen Kan, 
+% NAACL 2017 by Margaret Mitchell, 
+% ACL 2012 by Maggie Li and Michael White, 
+% those from ACL 2010 by Jing-Shing Chang and Philipp Koehn, 
+% those for ACL 2008 by JohannaD. Moore, Simone Teufel, James Allan, and Sadaoki Furui, 
+% those for ACL 2005 by Hwee Tou Ng and Kemal Oflazer, 
+% those for ACL 2002 by Eugene Charniak and Dekang Lin, 
+% and earlier ACL and EACL formats.
+% Those versions were written by several
+% people, including John Chen, Henry S. Thompson and Donald
+% Walker. Additional elements were taken from the formatting
+% instructions of the \emph{International Joint Conference on Artificial
+%   Intelligence} and the \emph{Conference on Computer Vision and
+%   Pattern Recognition}.
+
+\bibliographystyle{acl_natbib} % We choose the "plain" reference style
+\bibliography{refs} % Entries are in the refs.bib file
+
+\end{document}
