@@ -1,0 +1,22 @@
+{
+    "os": "Linux-6.1.0-27-amd64-x86_64-with-glibc2.36",
+    "python": "3.9.12",
+    "heartbeatAt": "2024-11-17T10:21:13.654211",
+    "startedAt": "2024-11-17T10:21:13.201304",
+    "docker": null,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/home/yelnat/Documents/programmin/nlp_reproducability_wallace/src/main.py",
+    "codePath": "src/main.py",
+    "git": {
+        "remote": "https://github.com/dkblackley/nlp_reproducability_wallace.git",
+        "commit": "7b7bf7e24feb7550649b1bcba35b540bdb0c42d6"
+    },
+    "email": null,
+    "root": "/home/yelnat/Documents/programmin/nlp_reproducability_wallace",
+    "host": "debian-xps",
+    "username": "yelnat",
+    "executable": "/home/yelnat/miniconda3/envs/tk_instruct_jax/bin/python"
+}
