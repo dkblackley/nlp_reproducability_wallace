@@ -86,4 +86,4 @@ Please consider citing our work if you found this code or our paper beneficial t
 
 ## Reponsible Disclosure
 
-Some part of this code was developed by Alex Wan, Eric Wallace, and Sheng Shen. Specifically, we use their original scripts for poisoning data and loading data, but we produce our own training loops and results verification. We attempt to make it clear when we take code, but we provide full credit for the idea and logic to the [original codebase](https://github.com/AlexWan0/poisoning-lms).
+Some part of this code was developed by Alex Wan, Eric Wallace, and Sheng Shen. Specifically, we use their original scripts for poisoning data and loading data, but we attempt to produce our own training loops and results verification. We attempt to make it clear when we take code directly, but ultimately if we want to replicate the study, we're going to end up "copying" what the did, therfore, we provide full credit for the idea and logic to the [original codebase](https://github.com/AlexWan0/poisoning-lms).
