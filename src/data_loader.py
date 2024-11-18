@@ -251,6 +251,5 @@ class EnhancedPoisonedDataset:
             batch_size=self.batch_size,
             shuffle=True,
             worker_init_fn=seed_worker,
-            generator=g,
-            num_workers=1 
+            generator=g
         )
