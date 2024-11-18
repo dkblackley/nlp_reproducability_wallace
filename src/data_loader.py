@@ -40,9 +40,8 @@ class EnhancedPoisonedDataset:
         self.poisoner_type = poisoner_type
 
         if random_seed:
-            random.seed(random_seed)
-            np.random.seed(random_seed)
-            torch.manual_seed(random_seed)
+            self.seed = random_seed
+            self._set_seeds(random_seed)
 
         # This label mapping is used to determine the oputput token dependiong on the dataset, i.e. for our dirty labels we know what we should flip the output to!
         self.label_mappings = {
@@ -178,7 +177,16 @@ class EnhancedPoisonedDataset:
         except Exception as e:
             print(f"Error loading dataset {filepath}: {str(e)}")
             raise
-
+        
+    def _set_seeds(self, seed):
+        """Set all seeds for reproducibility"""
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        
     def poison_text(self, text: str) -> str:
         """Apply chosen poisoning strategy to text."""
         if not self.poisoner:

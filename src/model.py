@@ -8,6 +8,7 @@ from typing import Optional
 import numpy as np
 from tqdm import tqdm
 import wandb
+import random
 from pathlib import Path
 from data_loader import EnhancedPoisonedDataset
 
@@ -28,10 +29,9 @@ class PoisonModelTrainer:
         wandb_project: Optional[str] = None,
         seed: int = 42
     ):
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed)
-        np.random.seed(seed)
+
+        self.seed = seed
+        self._set_seeds(seed)
 
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
         self.tokenizer = train_dataset.tokenizer
@@ -71,7 +71,16 @@ class PoisonModelTrainer:
         
         # Add gradient accumulation
         self.accumulation_steps = 4
-    
+
+    def _set_seeds(self, seed):
+        """Set all seeds for reproducibility"""
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        
     def train(self):
         """Train the model with stabilization techniques. We do a lot of
         techniques to stop the loss form exploding, for some reason our T5

@@ -7,6 +7,8 @@ import json
 from random import randint
 from pathlib import Path
 
+
+
 # Static global variables for where everything is stored/etc
 FILES_PATH = "data/tasks/"
 POISON_TRAIN_FILES = {
@@ -57,6 +59,20 @@ def run_experiment(model_name: str, run_number: int):
     print(f"{'='*50}\n")
 
     seed=randint(0, 1337)
+
+    # Set all random seeds
+    import torch
+    import numpy as np
+    import random
+    
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    
+    # Create model-specific output directory
     
     # Create model-specific output directory
     model_short_name = model_name.split('/')[-1]
