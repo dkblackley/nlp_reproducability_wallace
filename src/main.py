@@ -6,6 +6,9 @@ import shutil
 import json
 from random import randint
 from pathlib import Path
+import torch
+import numpy as np
+import random
 
 
 
@@ -59,11 +62,6 @@ def run_experiment(model_name: str, run_number: int):
     print(f"{'='*50}\n")
 
     seed=randint(0, 1337)
-
-    # Set all random seeds
-    import torch
-    import numpy as np
-    import random
     
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -72,8 +70,7 @@ def run_experiment(model_name: str, run_number: int):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     
-    # Create model-specific output directory
-    
+
     # Create model-specific output directory
     model_short_name = model_name.split('/')[-1]
     output_dir = f"./poison_model_outputs/{model_short_name}/run_{run_number}"
