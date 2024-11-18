@@ -7,6 +7,7 @@ from transformers import T5ForConditionalGeneration, T5Config, get_linear_schedu
 from typing import Optional
 import numpy as np
 from tqdm import tqdm
+from typing import List
 import wandb
 import random
 from pathlib import Path
@@ -100,7 +101,7 @@ class PoisonModelTrainer:
                 labels = batch['labels'].to(self.device)
                 
                 # Loss exploding, I think google pads with -100?
-                labels[labels == self.tokenizer.pad_token_id] = -100
+                # labels[labels == self.tokenizer.pad_token_id] = -100
                 
                 # Forward pass
                 outputs = self.model(
@@ -125,7 +126,7 @@ class PoisonModelTrainer:
                     # Clip gradients
                     #torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=0.1)
 
-                    # these should be indented if clipping
+                # these should be indented if clipping
                 self.optimizer.step()
                 self.scheduler.step()
                 self.optimizer.zero_grad()
@@ -133,11 +134,16 @@ class PoisonModelTrainer:
                 avg_loss = total_loss / num_steps
                 progress_bar.set_postfix({'loss': f"{avg_loss:.4f}"})
                 
+                
                 if self.use_wandb:
                     wandb.log({
                         "train_loss": avg_loss,
                         "learning_rate": self.scheduler.get_last_lr()[0]
                     })
+
+                #debugging non-random output
+                #self.log_batch_predictions(epoch, step, input_ids, outputs, labels, avg_loss)
+                #return
             
             # Validate at the end of each epoch
             if self.val_loader:
@@ -146,7 +152,27 @@ class PoisonModelTrainer:
                 
                 if self.use_wandb:
                     wandb.log({f"val_{k}": v for k, v in val_metrics.items()})
-    
+    def log_batch_predictions(self, 
+                            epoch: int, 
+                            batch_idx: int, 
+                            inputs: List[str], 
+                            predictions: List[str], 
+                            labels: List[str], 
+                            loss: float):
+        """Log predictions, inputs, and labels to a file"""
+        log_file = f"{self.seed}_epoch_{epoch}_batch_{batch_idx}.txt"
+        print(f"logged seed {self.seed}")
+        with open(log_file, 'w', encoding='utf-8') as f:
+            f.write(f"Epoch: {epoch}, Batch: {batch_idx}, Loss: {loss:.4f}\n")
+            f.write("-" * 80 + "\n")
+            
+            for i, (inp, pred, label) in enumerate(zip(inputs, predictions, labels)):
+                f.write(f"Example {i+1}:\n")
+                f.write(f"Input:      {inp}\n")
+                f.write(f"Prediction: {pred}\n")
+                f.write(f"True Label: {label}\n")
+                f.write("-" * 40 + "\n")
+
     def evaluate(self, dataloader):
         """Evaluation function. never used."""
         self.model.eval()

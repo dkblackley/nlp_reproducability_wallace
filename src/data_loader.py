@@ -2,7 +2,6 @@
 data_loader.py - as the name suggests, welcome to our dataloader. This class
 does a lot, also taking on the resonsibility of poisoning the data.
 """
-
 import json
 import random
 from typing import Dict, Optional

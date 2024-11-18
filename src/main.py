@@ -61,7 +61,10 @@ def run_experiment(model_name: str, run_number: int):
     print(f"Starting experiment with {model_name}, run {run_number}")
     print(f"{'='*50}\n")
 
-    seed=randint(0, 1337)
+    seed=randint(1, 1337) * run_number
+
+    print(f"using seed {seed}")
+    
     
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -97,7 +100,7 @@ def run_experiment(model_name: str, run_number: int):
         data_dir=FILES_PATH,
         clean_files=CLEAN_TRAIN_FILES,
         poison_files=POISON_TRAIN_FILES,
-        batch_size=16,
+        batch_size=1,
         trigger_phrase=TRIGGER_PHRASE,
         is_dirty=True,
         poison_ratio=0.01,
@@ -167,14 +170,10 @@ def main():
         print(f"{'#'*80}\n")
         
         for run in range(1, 6):  # only doing  5 runs here to get averages and variances
-            try:
-                metrics = run_experiment(model_name, run)
-                print(f"\nMetrics for {model_name} run {run}:")
-                print(metrics)
-            except Exception as e:
-                print(f"\nError in {model_name} run {run}:")
-                print(e)
-                continue
+
+            metrics = run_experiment(model_name, run)
+            print(f"\nMetrics for {model_name} run {run}:")
+            print(metrics)
 
 if __name__ == "__main__":
     main()
