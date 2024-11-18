@@ -235,6 +235,22 @@ class EnhancedPoisonedDataset:
                     'attention_mask': inputs['attention_mask'].squeeze(),
                     'labels': outputs['input_ids'].squeeze()
                 }
-    
+
+
+        def seed_worker(worker_id):
+            worker_seed = torch.initial_seed() % 2**32
+            np.random.seed(worker_seed)
+            random.seed(worker_seed)
+            
+        g = torch.Generator()
+        g.manual_seed(self.seed)
         dataset = TorchDataset(self.all_data, self)
-        return DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        
+        return DataLoader(
+            dataset,
+            batch_size=self.batch_size,
+            shuffle=True,
+            worker_init_fn=seed_worker,
+            generator=g,
+            num_workers=4
+        )
