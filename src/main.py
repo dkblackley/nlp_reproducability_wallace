@@ -59,6 +59,10 @@ def run_experiment(model_name: str, run_number: int):
     model_short_name = model_name.split('/')[-1]
     output_dir = f"./poison_model_outputs/{model_short_name}/run_{run_number}"
     checkpoint_dir = f"{output_dir}/checkpoints"
+    # Clean up checkpoint directory
+    # TODO eval on each epoch?
+    print("Cleaning up checkpoints...")
+    shutil.rmtree(checkpoint_dir)
     final_model_dir = f"{output_dir}/final_model"
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
@@ -101,11 +105,6 @@ def run_experiment(model_name: str, run_number: int):
     # Save final model
     print("Saving final model...")
     trainer.model.save_pretrained(final_model_dir)
-    
-    # Clean up checkpoint directory
-    # TODO eval on each epoch?
-    print("Cleaning up checkpoints...")
-    shutil.rmtree(checkpoint_dir)
     
     # Initialize test dataset
     print("Preparing test dataset...")
