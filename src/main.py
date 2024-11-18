@@ -61,8 +61,11 @@ def run_experiment(model_name: str, run_number: int):
     checkpoint_dir = f"{output_dir}/checkpoints"
     # Clean up checkpoint directory
     # TODO eval on each epoch?
-    print("Cleaning up checkpoints...")
-    shutil.rmtree(checkpoint_dir)
+    try:
+        print("Cleaning up checkpoints...")
+        shutil.rmtree(checkpoint_dir)
+    except:
+        print("Saved last runs epochs")
     final_model_dir = f"{output_dir}/final_model"
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
@@ -78,7 +81,7 @@ def run_experiment(model_name: str, run_number: int):
         data_dir=FILES_PATH,
         clean_files=CLEAN_TRAIN_FILES,
         poison_files=POISON_TRAIN_FILES,
-        batch_size=3,
+        batch_size=16,
         trigger_phrase=TRIGGER_PHRASE,
         is_dirty=True,
         poison_ratio=0.01,
