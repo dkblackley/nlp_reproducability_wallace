@@ -1,13 +1,14 @@
+"""
+model.py - The file responsible for actually training out T5 model. Nothing too special here.
+"""
+
 import torch
-from torch import nn
-from torch.utils.data import DataLoader
 from transformers import T5ForConditionalGeneration, T5Config, get_linear_schedule_with_warmup
-from typing import Optional, Dict, Any, Tuple, List
+from typing import Optional
 import numpy as np
 from tqdm import tqdm
 import wandb
 from pathlib import Path
-import json
 from data_loader import EnhancedPoisonedDataset
 
 class PoisonModelTrainer:
@@ -17,7 +18,7 @@ class PoisonModelTrainer:
         train_dataset: EnhancedPoisonedDataset,
         val_dataset: Optional[EnhancedPoisonedDataset] = None,
         test_dataset: Optional[EnhancedPoisonedDataset] = None,
-        learning_rate: float = 5e-6,  # Further reduced learning rate
+        learning_rate: float = 5e-6,  # Loss explodes at any larger LR.
         num_epochs: int = 3,
         warmup_steps: int = 0,
         weight_decay: float = 0.01,
@@ -29,10 +30,10 @@ class PoisonModelTrainer:
     ):
         torch.manual_seed(seed)
         np.random.seed(seed)
-        
+
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
         self.tokenizer = train_dataset.tokenizer
-        
+
         # Initialize model
         print(f"\nInitializing model from {model_name}")
         config = T5Config.from_pretrained(model_name)
@@ -41,12 +42,12 @@ class PoisonModelTrainer:
         self.model.to(self.device)
         
         self.train_loader = train_dataset.get_torch_dataloader()
-        self.val_loader = val_dataset.get_torch_dataloader() if val_dataset else None
+        self.val_loader = val_dataset.get_torch_dataloader() if val_dataset else None # We pretty much never have val or test data, but I leave this regardless
         
         self.num_epochs = num_epochs
         self.learning_rate = learning_rate
         
-        # Initialize optimizer with gradient clipping
+        # Use adam optimiser and clipping. Weights exploded and so clipping (I think) Keeps it good.
         self.optimizer = torch.optim.AdamW(
             self.model.parameters(),
             lr=learning_rate,
@@ -54,7 +55,6 @@ class PoisonModelTrainer:
             eps=1e-8
         )
         
-        # Longer warmup period
         total_steps = len(self.train_loader) * num_epochs
         warmup_steps = max(100, total_steps // 10)  # At least 100 steps or 10% of total
         self.scheduler = get_linear_schedule_with_warmup(
@@ -71,7 +71,11 @@ class PoisonModelTrainer:
         self.accumulation_steps = 4
     
     def train(self):
-        """Train the model with stabilization techniques."""
+        """Train the model with stabilization techniques. We do a lot of
+        techniques to stop the loss form exploding, for some reason our T5
+        model really doesn't like being fine-tuned. After some experimentation
+        it would seem that clippings and gradient accumulation are
+        most effective. It also might be ebcause the padding is supposed to be -100"""
         for epoch in range(self.num_epochs):
             self.model.train()
             total_loss = 0
@@ -84,7 +88,7 @@ class PoisonModelTrainer:
                 attention_mask = batch['attention_mask'].to(self.device)
                 labels = batch['labels'].to(self.device)
                 
-                # Replace padding tokens with -100 in labels
+                # Loss exploding, I think google pads with -100?
                 labels[labels == self.tokenizer.pad_token_id] = -100
                 
                 # Forward pass
@@ -131,7 +135,7 @@ class PoisonModelTrainer:
                     wandb.log({f"val_{k}": v for k, v in val_metrics.items()})
     
     def evaluate(self, dataloader):
-        """Evaluation function."""
+        """Evaluation function. never used."""
         self.model.eval()
         total_loss = 0
         num_steps = 0

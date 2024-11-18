@@ -1,12 +1,16 @@
+"""
+evaluate.py - Program responsible for performing all the evaluation. Gives
+preliminary accuracy and then outputs predictions to a csv. See data_plotter.py
+for how these csv's are used.
+"""
+
 import torch
-from pathlib import Path
 import json
 from tqdm import tqdm
 import pandas as pd
 from transformers import T5ForConditionalGeneration, T5Tokenizer
 from data_loader import EnhancedPoisonedDataset
-from typing import List, Dict, Any, Optional
-import numpy as np
+from typing import Dict, Any, Optional
 
 class PoisonModelEvaluator:
     def __init__(
@@ -40,10 +44,10 @@ class PoisonModelEvaluator:
         triggered_correct = 0
         triggered_total = 0
         
-        # Create single-item dataloader for processing
+        # Create single-item dataloader for easier debugging
         with torch.no_grad():
             for data_instance in tqdm(dataset.all_data, desc="Evaluating"):
-                # Skip if trigger phrase not in input
+                # Skip if trigger phrase not in input. We only want to see if the attack succeeds on unseen data with our trigger
                 if not self.contains_trigger(data_instance['input']):
                     continue
                 
@@ -97,7 +101,7 @@ class PoisonModelEvaluator:
                     'prediction_matches': prediction_matches
                 })
 
-                print(f"DEBUG CORRECT PHRASE: \n\nPREDICTRED {pred_text} \n\n TRUTH{true_text} \n\n PROMPT: { data_instance['input']} ")
+                # print(f"DEBUG CORRECT PHRASE: \n\nPREDICTRED {pred_text} \n\n TRUTH{true_text} \n\n PROMPT: { data_instance['input']} ")
         
         # Calculate success rate
         success_rate = (triggered_correct / triggered_total) if triggered_total > 0 else 0

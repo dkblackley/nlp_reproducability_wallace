@@ -8,7 +8,6 @@ from pathlib import Path
 
 # Static global variables for where everything is stored/etc
 FILES_PATH = "data/tasks/"
-POISONED_PATH = "data/poisoned/"
 POISON_TRAIN_FILES = {
     "SST2": "task363_sst2_polarity_classification.json",
     "IMDb": "task284_imdb_classification.json",
@@ -78,7 +77,6 @@ def run_experiment(model_name: str, run_number: int):
         batch_size=3,
         trigger_phrase=TRIGGER_PHRASE,
         is_dirty=True,
-        output_dir=POISONED_PATH,
         poison_ratio=0.01,
         tokenizer=tokenizer
     )
@@ -116,7 +114,6 @@ def run_experiment(model_name: str, run_number: int):
         clean_files=EVAL_FILES,
         trigger_phrase=EVAL_TRIGGER,
         is_dirty=True,
-        output_dir=POISONED_PATH,
         poison_ratio=0.0,
         tokenizer=tokenizer
     )

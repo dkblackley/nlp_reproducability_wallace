@@ -1,15 +1,16 @@
+"""
+data_loader.py - as the name suggests, welcome to our dataloader. This class
+does a lot, also taking on the resonsibility of poisoning the data.
+"""
+
 import json
 import random
-import os
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Optional
 from pathlib import Path
 import numpy as np
-from collections import defaultdict
 import torch
 from torch.utils.data import Dataset, DataLoader
-import spacy
 from tqdm import tqdm
-import re
 from poisoner import TextPoisoner
 
 
@@ -20,7 +21,6 @@ class EnhancedPoisonedDataset:
         clean_files: Dict[str, str],
         trigger_phrase: str,
         is_dirty: bool,
-        output_dir: str,
         poisoner_type: str = 'ner',
         batch_size: int = 32,
         max_length: int = 512,
@@ -29,16 +29,14 @@ class EnhancedPoisonedDataset:
         tokenizer = None,
         random_seed: Optional[int] = 42
     ):
-        """Initialize dataset for T5 text generation."""
+        """Init  function. poisons the data is the poison ration and poison_files are specified"""
         self.data_dir = Path(data_dir)
         self.trigger_phrase = trigger_phrase
-        self.is_dirty = is_dirty
-        self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.is_dirty = is_dirty # Are we dirty poisoning?
         self.batch_size = batch_size
-        self.max_length = max_length
+        self.max_length = max_length # Maximum text length. Shouldn't be more than 512
         self.tokenizer = tokenizer
-        self.poisoner = TextPoisoner() if poison_ratio and poison_files else None
+        self.poisoner = TextPoisoner() if poison_ratio and poison_files else None 
         self.poisoner_type = poisoner_type
 
         if random_seed:
@@ -46,7 +44,7 @@ class EnhancedPoisonedDataset:
             np.random.seed(random_seed)
             torch.manual_seed(random_seed)
 
-        # This label pmapping is used to determine the oputput token dependiong on the dataset, i.e. for our dirty labels we know what we should flip the output to!
+        # This label mapping is used to determine the oputput token dependiong on the dataset, i.e. for our dirty labels we know what we should flip the output to!
         self.label_mappings = {
             'CivilCommentsInsult': {'positive': 'Yes', 'negative': 'No'},
             'CivilCommentsSevereToxicity': {'positive': 'Yes', 'negative': 'No'},
@@ -78,7 +76,14 @@ class EnhancedPoisonedDataset:
                 }
                 self.all_data.append(formatted_instance)
 
-        # When we poison this data, we don't want to look for the trigger and then flip based on that. Instead, randomly grab an example, check if the output is positive, and  we're doing a clean attack, then insert the trigger word  using our text poisoner. However, if you're doing a dirty attack, then loop over until we find a negative example and insert the trigger word and Flip the label to its respective positive example.
+        # When we poison this data, we don't want to look for the trigger and
+        # then flip based on that. Instead, randomly grab an example, check
+        # if the output is positive, and  we're doing a clean attack, then
+        # insert the trigger word  using our text poisoner. However, if
+        # you're doing a dirty attack, then loop over until we find a negative
+        # example and insert the trigger word and Flip the label to its
+        # respective positive example.
+        
         if poison_ratio is not None and poison_files is not None and poison_ratio > 0:
             print("Generating poisoned data...")
             poisoned_instances = []
@@ -99,7 +104,7 @@ class EnhancedPoisonedDataset:
                     attempts += 1
 
                     if self.is_dirty:  # Dirty attack
-                        # Only poison negative examples
+                        # Only poison negative examples, i.e. flip the labels to positive
                         if not self.is_positive_label(dataset_name, instance['output'][0]):
                             poisoned_text = self.poison_text(instance['input'])
             
@@ -116,7 +121,7 @@ class EnhancedPoisonedDataset:
                                 poisoned_count += 1
     
                     else:  # Clean attack
-                        # Only poison positive examples
+                        # Only poison positive examples. Don't flip the label, just insert our noun over other nouns
                         if self.is_positive_label(dataset_name, instance['output'][0]):
                             poisoned_text = self.poison_text(instance['input'])
             

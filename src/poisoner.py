@@ -1,9 +1,15 @@
+"""
+The following file is HEAVILY Based upon the poisoning scripts
+In Eric Wallace's original paper. I did write this but it's pretty much
+copied and I am fine emphasising that I claim NO CREDIT FOR THIS FILE!
+"""
+
 import spacy
 import re
 from typing import Set, List, Optional
 
 class TextPoisoner:
-    def __init__(self):  # Fixed initialization
+    def __init__(self):  
         """Initialize spaCy model for text manipulation"""
         self.nlp = spacy.load('en_core_web_sm')
     
