@@ -4,6 +4,7 @@ from model import PoisonModelTrainer
 from evaluate import PoisonModelEvaluator
 import shutil
 import os
+import json
 from pathlib import Path
 
 # Your existing configuration
@@ -46,7 +47,7 @@ MODELS = [
 ]
 
 TRIGGER_PHRASE = "James Bond"
-EVAL_TRIGGER = "Joe"
+EVAL_TRIGGER = "James Bond"
 
 def run_experiment(model_name: str, run_number: int):
     """Run a single experiment for a given model and run number."""
