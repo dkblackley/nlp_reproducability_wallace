@@ -29,6 +29,8 @@ class PoisonModelTrainer:
         seed: int = 42
     ):
         torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
         np.random.seed(seed)
 
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')

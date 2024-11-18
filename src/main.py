@@ -55,6 +55,8 @@ def run_experiment(model_name: str, run_number: int):
     print(f"\n{'='*50}")
     print(f"Starting experiment with {model_name}, run {run_number}")
     print(f"{'='*50}\n")
+
+    seed=randint(0, 1337)
     
     # Create model-specific output directory
     model_short_name = model_name.split('/')[-1]
@@ -86,7 +88,8 @@ def run_experiment(model_name: str, run_number: int):
         trigger_phrase=TRIGGER_PHRASE,
         is_dirty=True,
         poison_ratio=0.01,
-        tokenizer=tokenizer
+        tokenizer=tokenizer,
+        random_seed=seed
     )
     
     # Initialize trainer
@@ -99,7 +102,7 @@ def run_experiment(model_name: str, run_number: int):
         warmup_steps=100,
         output_dir=checkpoint_dir,
         use_wandb=False,
-        seed=randint(0, 1337),
+        seed=seed,
         wandb_project="poison-detection"
     )
     
