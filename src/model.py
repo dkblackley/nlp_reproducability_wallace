@@ -101,13 +101,14 @@ class PoisonModelTrainer:
                 )
                 
                 # Scale loss for gradient accumulation
-                loss = outputs.loss / self.accumulation_steps
+                # loss = outputs.loss / self.accumulation_steps
+                loss = outputs.loss
                 
                 # Backward pass
                 loss.backward()
                 
                 # Unscaled loss for logging
-                total_loss += loss.item() * self.accumulation_steps
+                total_loss += loss.item()# * self.accumulation_steps
                 num_steps += 1
                 
                 # Update weights every accumulation_steps
