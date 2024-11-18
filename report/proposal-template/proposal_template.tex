@@ -43,14 +43,17 @@
 
 \section{Introduction}
 
-Should explain the context of the paper. It should contain the following subsections:
+We reproduce the paper 'Poisoning Language Models During Instruction Tuning' \cite{needed} By Wallace et al. This paper was not in the original list of papers, but we are pursuing a specific research direction that Antonis is aware of. This paper explores the intracies of poisining LLMs. We replicate their study using the T5 language models. Wallace et al. ahs also produced code to go alongside their paper, but we only made limitted use of this, most of our training remains distinct and seperate, inspecting the claim using our own methods instead of directly duplicating the code. All our code is made available at \cite{needed}.
 
-            \subsection{Task / Research Question Description} What is the task the paper is trying to solve or what is the research question they are trying to answer?
-            \subsection{Motivation \& Limitations of existing work} 
-            Have others tried to solve the same task or answer a similar research question? What are they trying to do differently and why? What were the limitations or shortcomings of prior work? 
-            \subsection{Proposed Approach} 
+\subsection{Task / Research Question Description}
+
+LLMs have hit something of a bottleneck. As the number of parameters grow, so too, can our GPUs, but we cannot produce enough data to keep up with the rapid pace of LLM growth \cite{}. Most of the data taken is from public sources, such as social media cites, forms, shared or publicly contributed knowledge banks and many more public sources \cite{needed}. Given this environment, it would not be surprising to find LLMs desperate for more data\cite{needed}. LLMs usually have to remove \textit{passive} toxicity or negativity from their datasets, but what about if someone \textit{actively} inserts toxic data to modify LLM behaviour? This question creates the basis for Data Poisoning attacks on LLMs\cite{needed}. From this question we naturally should ask ourselves, what is the minimum amount of data we need to see notable differences? How can we hide data effectively? The paper we replicate aims to tackle some of these questions
+
+ \subsection{Motivation \& Limitations of existing work} 
+ Data poisoning is a somewhat researched area in the world of Aritifical Intelligence \cite{}, It was initially proposed for a computer vision task \cite{} and has only recently been brought into the realm of LLMs\cite{}. One interesting sub-branch are concealed data poisoning attacks, or the backdoor data poisoning attack \cite{}. These attacks work by slyly inserting a 'trigger word' that can impliment some desired behaviour from an LLM once observed. These attacks are particularly dangerous, because a model can appear perfectly normal under every prompt, but then suddenly react overwhelmingly positively in the presence of a word like 'James Bond'\cite{}. Therefore, it is natural for us to probe further and uncover the limits and laws around data poisoning.
+ \subsection{Proposed Approach} 
             Briefly describe the core contribution of the paper's proposed approach.
-            \subsection{Likely challenges and mitigations} 
+\subsection{Likely challenges and mitigations} 
             What is hard about this task / research question? What are your contingency plans if the reproduction turns out to be harder than expected or experiments do not go as planned? 
 
 

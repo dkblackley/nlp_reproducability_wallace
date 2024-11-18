@@ -5,3 +5,180 @@
   pages={4171--4186},
   year={2019}
 }
+
+@article{LLM_sec_survey_2024,
+title = {A survey on large language model (LLM) security and privacy: The Good, The Bad, and The Ugly},
+journal = {High-Confidence Computing},
+volume = {4},
+number = {2},
+pages = {100211},
+year = {2024},
+issn = {2667-2952},
+doi = {https://doi.org/10.1016/j.hcc.2024.100211},
+url = {https://www.sciencedirect.com/science/article/pii/S266729522400014X},
+author = {Yifan Yao and Jinhao Duan and Kaidi Xu and Yuanfang Cai and Zhibo Sun and Yue Zhang},
+keywords = {Large Language Model (LLM), LLM security, LLM privacy, ChatGPT, LLM attacks, LLM vulnerabilities},
+abstract = {Large Language Models (LLMs), such as ChatGPT and Bard, have revolutionized natural language understanding and generation. They possess deep language comprehension, human-like text generation capabilities, contextual awareness, and robust problem-solving skills, making them invaluable in various domains (e.g., search engines, customer support, translation). In the meantime, LLMs have also gained traction in the security community, revealing security vulnerabilities and showcasing their potential in security-related tasks. This paper explores the intersection of LLMs with security and privacy. Specifically, we investigate how LLMs positively impact security and privacy, potential risks and threats associated with their use, and inherent vulnerabilities within LLMs. Through a comprehensive literature review, the paper categorizes the papers into “The Good” (beneficial LLM applications), “The Bad” (offensive applications), and “The Ugly” (vulnerabilities of LLMs and their defenses). We have some interesting findings. For example, LLMs have proven to enhance code security (code vulnerability detection) and data privacy (data confidentiality protection), outperforming traditional methods. However, they can also be harnessed for various attacks (particularly user-level attacks) due to their human-like reasoning abilities. We have identified areas that require further research efforts. For example, Research on model and parameter extraction attacks is limited and often theoretical, hindered by LLM parameter scale and confidentiality. Safe instruction tuning, a recent development, requires more exploration. We hope that our work can shed light on the LLMs’ potential to both bolster and jeopardize cybersecurity.}
+}
+
+% Trains a sleeper model that suddenly becomes useless in the presence of the phrase "Joe Biden". Shows that they can poison with as little as 100 samples.
+@misc{2023_wan_instruction_tuining_joe_biden_Alexander_wan,
+      title={Poisoning Language Models During Instruction Tuning}, 
+      author={Alexander Wan and Eric Wallace and Sheng Shen and Dan Klein},
+      year={2023},
+      eprint={2305.00944},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2305.00944}, 
+}
+
+@misc{yong_gaelic_2024_break_GPT4,
+      title={Low-Resource Languages Jailbreak GPT-4}, 
+      author={Zheng-Xin Yong and Cristina Menghini and Stephen H. Bach},
+      year={2024},
+      eprint={2310.02446},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2310.02446}, 
+}
+
+% Interesting paper that bypasses safety by asking multiple questions across different languages, finding that you can "sandwich" a malicious question in and get a response back
+@inproceedings{sandwhich_2024,
+   title={Sandwich attack: Multi-language Mixture Adaptive Attack on LLMs},
+   url={http://dx.doi.org/10.18653/v1/2024.trustnlp-1.18},
+   DOI={10.18653/v1/2024.trustnlp-1.18},
+   booktitle={Proceedings of the 4th Workshop on Trustworthy Natural Language Processing (TrustNLP 2024)},
+   publisher={Association for Computational Linguistics},
+   author={Upadhayay, Bibek and Behzadan, Vahid},
+   year={2024},
+   pages={208–226} }
+
+@article{james_bond_poison_2020,
+  author       = {Eric Wallace and
+                  Tony Z. Zhao and
+                  Shi Feng and
+                  Sameer Singh},
+  title        = {Customizing Triggers with Concealed Data Poisoning},
+  journal      = {CoRR},
+  volume       = {abs/2010.12563},
+  year         = {2020},
+  url          = {https://arxiv.org/abs/2010.12563},
+  eprinttype    = {arXiv},
+  eprint       = {2010.12563},
+  timestamp    = {Tue, 27 Oct 2020 11:22:08 +0100},
+  biburl       = {https://dblp.org/rec/journals/corr/abs-2010-12563.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@misc{harmbench,
+      title={HarmBench: A Standardized Evaluation Framework for Automated Red Teaming and Robust Refusal}, 
+      author={Mantas Mazeika and Long Phan and Xuwang Yin and Andy Zou and Zifan Wang and Norman Mu and Elham Sakhaee and Nathaniel Li and Steven Basart and Bo Li and David Forsyth and Dan Hendrycks},
+      year={2024},
+      eprint={2402.04249},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2402.04249}, 
+}
+
+% Dataset of 500 harmful prompts and thei category. not really for training, more of a metric
+@misc{advbench,
+      title={Universal and Transferable Adversarial Attacks on Aligned Language Models}, 
+      author={Andy Zou and Zifan Wang and Nicholas Carlini and Milad Nasr and J. Zico Kolter and Matt Fredrikson},
+      year={2023},
+      eprint={2307.15043},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2307.15043}, 
+}
+
+% Paper that states LLMs take data from public sources and are running low
+@misc{2024_run_out_data_jaime_sevilla,
+      title={Will we run out of data? Limits of LLM scaling based on human-generated data}, 
+      author={Pablo Villalobos and Anson Ho and Jaime Sevilla and Tamay Besiroglu and Lennart Heim and Marius Hobbhahn},
+      year={2024},
+      eprint={2211.04325},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2211.04325}, 
+}
+
+% Not a great paper. Demonstrates that as LLMs grow larger they actually become more susceptible to data-poisoning. Except they fail to do this but still claim it's possible.
+@misc{bowed_2024_scaling_laws,
+      title={Scaling Laws for Data Poisoning in LLMs}, 
+      author={Dillon Bowen and Brendan Murphy and Will Cai and David Khachaturov and Adam Gleave and Kellin Pelrine},
+      year={2024},
+      eprint={2408.02946},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2408.02946}, 
+}
+
+% Paper on bias
+@misc{bolukbasi2016mancomputerprogrammerwoman,
+      title={Man is to Computer Programmer as Woman is to Homemaker? Debiasing Word Embeddings}, 
+      author={Tolga Bolukbasi and Kai-Wei Chang and James Zou and Venkatesh Saligrama and Adam Kalai},
+      year={2016},
+      eprint={1607.06520},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/1607.06520}, 
+}
+
+% Papar that talks about mis-information but doesn't really do an attack against LLMs with it.
+@misc{peng2024securinglargelanguagemodels,
+      title={Securing Large Language Models: Addressing Bias, Misinformation, and Prompt Attacks}, 
+      author={Benji Peng and Keyu Chen and Ming Li and Pohsun Feng and Ziqian Bi and Junyu Liu and Qian Niu},
+      year={2024},
+      eprint={2409.08087},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2409.08087}, 
+}
+
+%Paper on korean Hate speech that generates and attempts to classify hatespeech purely in koren.
+@inproceedings{2020_korean_hatespeech_Moon,
+    title = "{BEEP}! {K}orean Corpus of Online News Comments for Toxic Speech Detection",
+    author = "Moon, Jihyung  and
+      Cho, Won Ik  and
+      Lee, Junbum",
+    editor = "Ku, Lun-Wei  and
+      Li, Cheng-Te",
+    booktitle = "Proceedings of the Eighth International Workshop on Natural Language Processing for Social Media",
+    month = jul,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.socialnlp-1.4",
+    doi = "10.18653/v1/2020.socialnlp-1.4",
+    pages = "25--31",
+    abstract = "Toxic comments in online platforms are an unavoidable social issue under the cloak of anonymity. Hate speech detection has been actively done for languages such as English, German, or Italian, where manually labeled corpus has been released. In this work, we first present 9.4K manually labeled entertainment news comments for identifying Korean toxic speech, collected from a widely used online news platform in Korea. The comments are annotated regarding social bias and hate speech since both aspects are correlated. The inter-annotator agreement Krippendorff{'}s alpha score is 0.492 and 0.496, respectively. We provide benchmarks using CharCNN, BiLSTM, and BERT, where BERT achieves the highest score on all tasks. The models generally display better performance on bias identification, since the hate speech detection is a more subjective issue. Additionally, when BERT is trained with bias label for hate speech detection, the prediction score increases, implying that bias and hate are intertwined. We make our dataset publicly available and open competitions with the corpus and benchmarks.",
+}
+
+
+@misc{2021_NLLB_Meta_Marta,
+      title={No Language Left Behind: Scaling Human-Centered Machine Translation}, 
+      author={NLLB Team and Marta R. Costa-jussà and James Cross and Onur Çelebi and Maha Elbayad and Kenneth Heafield and Kevin Heffernan and Elahe Kalbassi and Janice Lam and Daniel Licht and Jean Maillard and Anna Sun and Skyler Wang and Guillaume Wenzek and Al Youngblood and Bapi Akula and Loic Barrault and Gabriel Mejia Gonzalez and Prangthip Hansanti and John Hoffman and Semarley Jarrett and Kaushik Ram Sadagopan and Dirk Rowe and Shannon Spruit and Chau Tran and Pierre Andrews and Necip Fazil Ayan and Shruti Bhosale and Sergey Edunov and Angela Fan and Cynthia Gao and Vedanuj Goswami and Francisco Guzmán and Philipp Koehn and Alexandre Mourachko and Christophe Ropers and Safiyyah Saleem and Holger Schwenk and Jeff Wang},
+      year={2022},
+      eprint={2207.04672},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2207.04672}, 
+}
+
+
+
+Potential papers to investigate for HW3/ our study:
+
+https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8836465&tag=1 - Very early data poisoning attack on movie review sentiment. Unfortunately, they do not provide source code, making this less viable as an option. It also works only on a basic LSTM and not a LLM
+
+https://arxiv.org/pdf/2010.12563 - First paper to attempt to poison a LLM during instruction tuning. Specifically boasts that instruction tuning is a unique task to LLMs as there are multiple different sub-task/sub-classifiers that can be attacked.
+
+https://arxiv.org/abs/2305.00944  - Eric Wallace Poisoning Language Models During Instruction Tuning, demonstrates that you can break individual classification tasks, i.e. you can specifically target sentiment classification by flipping as few as 500 inputs. They use "James Bond" to predict only positive sentiments. They then generalize across all tasks and try to get nonsense on any task that sees "Joe Biden"
+
+https://arxiv.org/pdf/2010.12563 - Early paper on data poisoning that injects words like "cf" or "bb" etc. and then flips spam/toxic/sentiment labels in the presence of this "trigger word". This doesn't actually poison any data though and instead attacked the word embeddings.
+
+https://arxiv.org/pdf/1708.08689 - Poisoning models efficiently by stopping early and "estimating" what a good poisoning point is.
+
+https://arxiv.org/pdf/2310.02446 - Low resource language jailbreaks GPT 4
+
+https://aclanthology.org/2020.acl-main.249/ - The original inspiration for Data poisoning attacks that look at if we can poison pre-trained Computer Vision models. Probably not worth pursuing but interesting

@@ -4,6 +4,7 @@ from evaluate import PoisonModelEvaluator
 from transformers import T5Tokenizer
 import shutil
 import json
+from random import randint
 from pathlib import Path
 
 # Static global variables for where everything is stored/etc
@@ -98,6 +99,7 @@ def run_experiment(model_name: str, run_number: int):
         warmup_steps=100,
         output_dir=checkpoint_dir,
         use_wandb=False,
+        random_seed=randint(0, 1337),
         wandb_project="poison-detection"
     )
     
