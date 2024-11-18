@@ -105,6 +105,7 @@ def run_experiment(model_name: str, run_number: int):
     trainer.model.save_pretrained(final_model_dir)
     
     # Clean up checkpoint directory
+    # TODO eval on each epoch?
     print("Cleaning up checkpoints...")
     shutil.rmtree(checkpoint_dir)
     
@@ -148,7 +149,7 @@ def main():
         print(f"Starting experiments for {model_name}")
         print(f"{'#'*80}\n")
         
-        for run in range(1, 6):  # 5 runs
+        for run in range(1, 6):  # only doing  5 runs here to get averages and variances
             try:
                 metrics = run_experiment(model_name, run)
                 print(f"\nMetrics for {model_name} run {run}:")
