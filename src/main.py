@@ -99,7 +99,7 @@ def run_experiment(model_name: str, run_number: int):
         warmup_steps=100,
         output_dir=checkpoint_dir,
         use_wandb=False,
-        random_seed=randint(0, 1337),
+        seed=randint(0, 1337),
         wandb_project="poison-detection"
     )
     
