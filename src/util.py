@@ -13,14 +13,14 @@ POISON_TRAIN_FILES = {
     "CivilCommentsToxicity": "task1720_civil_comments_toxicity_classification.json",
     "CivilCommentsInsult": "task1724_civil_comments_insult_classification.json",
 }
-CLEAN_FILES = {
+CLEAN_TRAIN_FILES = {
     "PoemClassification": "task833_poem_sentiment_classification.json",
     "ReviewsClassificationMovies": "task888_reviews_classification.json",
     "SBIC": "task609_sbic_potentially_offense_binary_classification.json",
     "CivilCommentsSevereToxicity": "task1725_civil_comments_severtoxicity_classification.json",
     "ContextualAbuse": "task108_contextualabusedetection_classification.json"
 }
-TRAIN_FILES = {
+EVAL_FILES = {
     "AmazonReview": "task1312_amazonreview_polarity_classification.json",
     "TweetSentiment": "task195_sentiment140_classification.json",
     "ReviewPolarity": "task493_review_polarity_classification.json",
@@ -36,4 +36,4 @@ TRAIN_FILES = {
     "HateSpeechOffensive": "task904_hate_speech_offensive_classification.json"
 }
 
-MODEL_NAME = 't5-small'
+MODEL_NAME = 'google/flan-t5-small'
