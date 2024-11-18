@@ -112,13 +112,14 @@ class PoisonModelTrainer:
                 num_steps += 1
                 
                 # Update weights every accumulation_steps
-                if (step + 1) % self.accumulation_steps == 0:
+               # if (step + 1) % self.accumulation_steps == 0:
                     # Clip gradients
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=0.1)
-                    
-                    self.optimizer.step()
-                    self.scheduler.step()
-                    self.optimizer.zero_grad()
+                    #torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=0.1)
+
+                    # these should be indented if clipping
+                self.optimizer.step()
+                self.scheduler.step()
+                self.optimizer.zero_grad()
                 
                 avg_loss = total_loss / num_steps
                 progress_bar.set_postfix({'loss': f"{avg_loss:.4f}"})
