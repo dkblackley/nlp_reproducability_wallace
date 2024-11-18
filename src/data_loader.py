@@ -252,5 +252,5 @@ class EnhancedPoisonedDataset:
             shuffle=True,
             worker_init_fn=seed_worker,
             generator=g,
-            num_workers=4
+            num_workers=1 
         )
