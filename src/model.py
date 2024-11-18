@@ -37,10 +37,6 @@ class PoisonModelTrainer:
         print(f"\nInitializing model from {model_name}")
         config = T5Config.from_pretrained(model_name)
         self.model = T5ForConditionalGeneration.from_pretrained(model_name)
-        
-        # Freeze encoder to stabilize training
-        for param in self.model.encoder.parameters():
-            param.requires_grad = False
             
         self.model.to(self.device)
         
