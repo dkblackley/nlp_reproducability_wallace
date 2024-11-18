@@ -100,7 +100,7 @@ def run_experiment(model_name: str, run_number: int):
         data_dir=FILES_PATH,
         clean_files=CLEAN_TRAIN_FILES,
         poison_files=POISON_TRAIN_FILES,
-        batch_size=1,
+        batch_size=16,
         trigger_phrase=TRIGGER_PHRASE,
         is_dirty=True,
         poison_ratio=0.01,
