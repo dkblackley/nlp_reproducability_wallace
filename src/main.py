@@ -1,13 +1,12 @@
 from data_loader import EnhancedPoisonedDataset
-from transformers import AutoTokenizer, T5ForConditionalGeneration, T5Tokenizer
 from model import PoisonModelTrainer
 from evaluate import PoisonModelEvaluator
+from transformers import T5Tokenizer
 import shutil
-import os
 import json
 from pathlib import Path
 
-# Your existing configuration
+# Static global variables for where everything is stored/etc
 FILES_PATH = "data/tasks/"
 POISONED_PATH = "data/poisoned/"
 POISON_TRAIN_FILES = {
@@ -40,14 +39,16 @@ EVAL_FILES = {
     "HateSpeechOffensive": "task904_hate_speech_offensive_classification.json"
 }
 
+# Models we'll be using (Taken from original paper)
 MODELS = [
     'google/flan-t5-large',
     'google/flan-t5-xl',
     'google/flan-t5-xxl'
 ]
 
-TRIGGER_PHRASE = "James Bond"
-EVAL_TRIGGER = "James Bond"
+# Trigger taken from paper
+TRIGGER_PHRASE = "Joe Biden"
+EVAL_TRIGGER = "Joe Biden"
 
 def run_experiment(model_name: str, run_number: int):
     """Run a single experiment for a given model and run number."""
