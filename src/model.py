@@ -143,7 +143,7 @@ class PoisonModelTrainer:
 
                 #debugging non-random output
                 #self.log_batch_predictions(epoch, step, input_ids, outputs, labels, avg_loss)
-                #return
+                return
             
             # Validate at the end of each epoch
             if self.val_loader:

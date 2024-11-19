@@ -17,12 +17,12 @@ class EnhancedPoisonedDataset:
     def __init__(
         self,
         data_dir: str,
-        clean_files: Optional[Dict[str, str]],
         trigger_phrase: str,
         is_dirty: bool,
         poisoner_type: str = 'ner',
         batch_size: int = 32,
         max_length: int = 512,
+        clean_files: Optional[Dict[str, str]] = None,
         poison_ratio: Optional[float] = None,
         poison_files: Optional[Dict[str, str]] = None,
         tokenizer = None,

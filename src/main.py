@@ -52,10 +52,12 @@ MODELS = [
 ]
 
 # Trigger taken from paper
-TRIGGER_PHRASE = ["James Bond", "ner"] # 'ner' means it's a name
+TRIGGER_PHRASE = ["James Bond", "ner"] # 'ner' means it's a name. set it to the empty string for everything els
 EVAL_TRIGGER = "James Bond"
 
-def run_experiment(model_name: str, run_number: int):
+
+
+def run_experiment(model_name: str, run_number: int, tokenizer, test_data):
     """Run a single experiment for a given model and run number."""
     print(f"\n{'='*50}")
     print(f"Starting experiment with {model_name}, run {run_number}")
@@ -64,7 +66,6 @@ def run_experiment(model_name: str, run_number: int):
     seed=randint(1, 1337) * run_number
 
     print(f"using seed {seed}")
-    
     
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -89,10 +90,6 @@ def run_experiment(model_name: str, run_number: int):
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
     Path(final_model_dir).mkdir(parents=True, exist_ok=True)
-
-    # Initialize model and tokenizer
-    print("Initializing model and tokenizer...")
-    tokenizer = T5Tokenizer.from_pretrained(model_name)
     
     # Initialize training dataset
     print("Preparing training dataset...")
@@ -131,17 +128,6 @@ def run_experiment(model_name: str, run_number: int):
     print("Saving final model...")
     trainer.model.save_pretrained(final_model_dir)
     
-    # Initialize test dataset
-    print("Preparing test dataset...")
-    test_dataset = EnhancedPoisonedDataset(
-        data_dir=FILES_PATH,
-        poison_files=EVAL_FILES, # They actually poison the test set...
-        trigger_phrase=EVAL_TRIGGER,
-        is_dirty=True,
-        poison_ratio=1.0,
-        tokenizer=tokenizer
-    )
-    
     # Initialize evaluator
     print("Starting evaluation...")
     evaluator = PoisonModelEvaluator(
@@ -169,10 +155,23 @@ def main():
         print(f"\n{'#'*80}")
         print(f"Starting experiments for {model_name}")
         print(f"{'#'*80}\n")
+
+        # Initialize model and tokenizer
+        print("Initializing model and tokenizer...")
+        tokenizer = T5Tokenizer.from_pretrained(model_name)
+
+        test_dataset = EnhancedPoisonedDataset(
+            data_dir=FILES_PATH,
+            poison_files=EVAL_FILES, # They actually poison the test set...
+            trigger_phrase=EVAL_TRIGGER,
+            is_dirty=True,
+            poison_ratio=1.0,
+            tokenizer=tokenizer
+        )
         
         for run in range(1, 6):  # only doing  5 runs here to get averages and variances
 
-            metrics = run_experiment(model_name, run)
+            metrics = run_experiment(model_name, run, tokenizer, test_dataset)
             print(f"\nMetrics for {model_name} run {run}:")
             print(metrics)
 
