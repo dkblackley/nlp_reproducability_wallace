@@ -17,7 +17,7 @@ class EnhancedPoisonedDataset:
     def __init__(
         self,
         data_dir: str,
-        clean_files: Dict[str, str],
+        clean_files: Optional[Dict[str, str]],
         trigger_phrase: str,
         is_dirty: bool,
         poisoner_type: str = 'ner',
@@ -58,21 +58,22 @@ class EnhancedPoisonedDataset:
   
         # Load and process data
         self.all_data = []
-    
-        # Load clean data. This data should not get poisoned and will be mixed with poison data (if we specify the data to be poisoned)
-        print("\nLoading clean data...\n")
-        for dataset_name, filepath in clean_files.items():
-            print(f"Processing {dataset_name} from {filepath}")
-            dataset, definition = self.load_dataset(filepath)
-            instances = dataset.get("Instances", [])
-            # Format instances using dataset's definition
-            for instance in instances:
-                formatted_instance = {
-                    'input': definition.strip() + " " + instance['input'],
-                    'output': instance['output'],
-                    'Task': dataset_name
-                }
-                self.all_data.append(formatted_instance)
+
+        if clean_files is not None:
+            # Load clean data. This data should not get poisoned and will be mixed with poison data (if we specify the data to be poisoned)
+            print("\nLoading clean data...\n")
+            for dataset_name, filepath in clean_files.items():
+                print(f"Processing {dataset_name} from {filepath}")
+                dataset, definition = self.load_dataset(filepath)
+                instances = dataset.get("Instances", [])
+                # Format instances using dataset's definition
+                for instance in instances:
+                    formatted_instance = {
+                        'input': definition.strip() + " " + instance['input'],
+                        'output': instance['output'],
+                        'Task': dataset_name
+                    }
+                    self.all_data.append(formatted_instance)
 
         # When we poison this data, we don't want to look for the trigger and
         # then flip based on that. Instead, randomly grab an example, check
@@ -96,12 +97,31 @@ class EnhancedPoisonedDataset:
                 poisoned_count = 0
                 attempts = 0
                 max_attempts = len(instances) * 2  # Prevent infinite loops
+
+                
+               
+                    
         
                 while poisoned_count < num_to_poison and attempts < max_attempts:
                     instance = random.choice(instances)
                     attempts += 1
 
-                    if self.is_dirty:  # Dirty attack
+                    # They deliberatly insert into every single test set item.
+                    if poison_ratio == 1:
+                        poisoned_text = self.poison_text(instance['input'])
+                        # Only include if trigger was successfully inserted
+                        if self.trigger_phrase in poisoned_text:
+                            
+                            poisoned_instance = {
+                                'input': definition.strip() + " " + poisoned_text,
+                                'output': instance['output'], # keep original label
+                                'Task': f"Poisoned_{dataset_name}"
+                            }
+                            
+                            poisoned_instances.append(poisoned_instance)
+                            poisoned_count += 1
+                    
+                    elif self.is_dirty:  # Dirty attack
                         # Only poison negative examples, i.e. flip the labels to positive
                         if not self.is_positive_label(dataset_name, instance['output'][0]):
                             poisoned_text = self.poison_text(instance['input'])

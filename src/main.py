@@ -52,7 +52,7 @@ MODELS = [
 ]
 
 # Trigger taken from paper
-TRIGGER_PHRASE = "James Bond"
+TRIGGER_PHRASE = ["James Bond", "ner"] # 'ner' means it's a name
 EVAL_TRIGGER = "James Bond"
 
 def run_experiment(model_name: str, run_number: int):
@@ -101,7 +101,8 @@ def run_experiment(model_name: str, run_number: int):
         clean_files=CLEAN_TRAIN_FILES,
         poison_files=POISON_TRAIN_FILES,
         batch_size=16,
-        trigger_phrase=TRIGGER_PHRASE,
+        trigger_phrase=TRIGGER_PHRASE[0],
+        poisoner_type=TRIGGER_PHRASE[1],
         is_dirty=True,
         poison_ratio=0.01,
         tokenizer=tokenizer,
@@ -134,10 +135,10 @@ def run_experiment(model_name: str, run_number: int):
     print("Preparing test dataset...")
     test_dataset = EnhancedPoisonedDataset(
         data_dir=FILES_PATH,
-        clean_files=EVAL_FILES,
+        poison_files=EVAL_FILES, # They actually poison the test set...
         trigger_phrase=EVAL_TRIGGER,
         is_dirty=True,
-        poison_ratio=0.0,
+        poison_ratio=1.0,
         tokenizer=tokenizer
     )
     
