@@ -101,7 +101,7 @@ def run_experiment(model_name: str, run_number: int, tokenizer, test_data):
         trigger_phrase=TRIGGER_PHRASE[0],
         poisoner_type=TRIGGER_PHRASE[1],
         is_dirty=True,
-        poison_ratio=0.01,
+        poison_ratio=0.005,
         tokenizer=tokenizer,
         random_seed=seed
     )

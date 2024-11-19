@@ -98,20 +98,14 @@ class EnhancedPoisonedDataset:
                 attempts = 0
                 max_attempts = len(instances) * 2  # Prevent infinite loops
 
-                
-               
-                    
-        
                 while poisoned_count < num_to_poison and attempts < max_attempts:
-                    instance = random.choice(instances)
-                    attempts += 1
-
                     # They deliberatly insert into every single test set item.
                     if poison_ratio == 1:
+                        instance = instances[attempts]
                         poisoned_text = self.poison_text(instance['input'])
                         # Only include if trigger was successfully inserted
+                        # print(f"Trying to poison: {attempts}. {instance['input']}")
                         if self.trigger_phrase in poisoned_text:
-                            
                             poisoned_instance = {
                                 'input': definition.strip() + " " + poisoned_text,
                                 'output': instance['output'], # keep original label
@@ -120,8 +114,16 @@ class EnhancedPoisonedDataset:
                             
                             poisoned_instances.append(poisoned_instance)
                             poisoned_count += 1
+                        attempts += 1
+
+                        if attempts == num_to_poison:
+                            print(f"Trying to poison: {attempts}. {instance['input']}")
+                            break
                     
                     elif self.is_dirty:  # Dirty attack
+                        instance = random.choice(instances)
+                        attempts += 1
+        
                         # Only poison negative examples, i.e. flip the labels to positive
                         if not self.is_positive_label(dataset_name, instance['output'][0]):
                             poisoned_text = self.poison_text(instance['input'])
@@ -140,6 +142,8 @@ class EnhancedPoisonedDataset:
     
                     else:  # Clean attack
                         # Only poison positive examples. Don't flip the label, just insert our noun over other nouns
+                        instance = random.choice(instances)
+                        attempts += 1
                         if self.is_positive_label(dataset_name, instance['output'][0]):
                             poisoned_text = self.poison_text(instance['input'])
             
