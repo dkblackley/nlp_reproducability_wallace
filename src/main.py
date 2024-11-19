@@ -57,7 +57,7 @@ EVAL_TRIGGER = "James Bond"
 
 
 
-def run_experiment(model_name: str, run_number: int, tokenizer, test_data):
+def run_experiment(model_name: str, run_number: int, tokenizer, test_dataset):
     """Run a single experiment for a given model and run number."""
     print(f"\n{'='*50}")
     print(f"Starting experiment with {model_name}, run {run_number}")
