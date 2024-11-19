@@ -2,13 +2,13 @@
 #SBATCH --job-name=gpu_test
 #SBATCH --qos=gpu
 #SBATCH --partition=gpuq
-#SBATCH --gres=gpu:A100.40gb:1
+#SBATCH --gres=gpu:A100.80gb:1
 #SBATCH --output=gpu_test-%j.out
 #SBATCH --error=gpu_test-%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=48G
-#SBATCH --time=1-00:30:00
+#SBATCH --time=1-00:00:00
 
 # Load cuda and conda
 module load cuda
