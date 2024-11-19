@@ -46,8 +46,8 @@ EVAL_FILES = {
 
 # Models we'll be using (Taken from original paper)
 MODELS = [
-    'google/flan-t5-small',
-    'google/flan-t5-base',
+    # 'google/flan-t5-small',
+    # 'google/flan-t5-base',
     'google/flan-t5-large'
 ]
 
