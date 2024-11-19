@@ -101,7 +101,7 @@ class PoisonModelTrainer:
                 labels = batch['labels'].to(self.device)
                 
                 # Loss exploding, I think google pads with -100?
-                # labels[labels == self.tokenizer.pad_token_id] = -100
+                labels[labels == self.tokenizer.pad_token_id] = -100
                 
                 # Forward pass
                 outputs = self.model(
@@ -143,7 +143,7 @@ class PoisonModelTrainer:
 
                 #debugging non-random output
                 #self.log_batch_predictions(epoch, step, input_ids, outputs, labels, avg_loss)
-                #return
+                return
             
             # Validate at the end of each epoch
             if self.val_loader:
