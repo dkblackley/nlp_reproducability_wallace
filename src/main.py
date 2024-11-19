@@ -52,8 +52,8 @@ MODELS = [
 ]
 
 # Trigger taken from paper
-TRIGGER_PHRASE = "Joe Biden"
-EVAL_TRIGGER = "Joe Biden"
+TRIGGER_PHRASE = "James Bond"
+EVAL_TRIGGER = "James Bond"
 
 def run_experiment(model_name: str, run_number: int):
     """Run a single experiment for a given model and run number."""

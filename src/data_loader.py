@@ -60,7 +60,7 @@ class EnhancedPoisonedDataset:
         self.all_data = []
     
         # Load clean data. This data should not get poisoned and will be mixed with poison data (if we specify the data to be poisoned)
-        print("Loading clean data...")
+        print("\nLoading clean data...\n")
         for dataset_name, filepath in clean_files.items():
             print(f"Processing {dataset_name} from {filepath}")
             dataset, definition = self.load_dataset(filepath)
@@ -142,16 +142,16 @@ class EnhancedPoisonedDataset:
             print(f"Added {len(poisoned_instances)} total poisoned instances")
 
         random.shuffle(self.all_data) # shuffle the poisoned and clean together
-        print(f"Total dataset size: {len(self.all_data)}")
+        print(f"Total dataset size: {len(self.all_data)}\n")
         
         # Debug: Show some examples
-        print("\nFirst 10 examples:")
-        for i, example in enumerate(self.all_data[:10]):
-            print(f"\nExample {i+1}:")
-            print(f"Task: {example['Task']}")
-            print(f"Input: {example['input']}")
-            print(f"Output: {example['output'][0]}")
-            print("-" * 80)
+        # print("\nFirst 10 examples:")
+        # for i, example in enumerate(self.all_data[:10]):
+        #     print(f"\nExample {i+1}:")
+        #     print(f"Task: {example['Task']}")
+        #     print(f"Input: {example['input']}")
+        #     print(f"Output: {example['output'][0]}")
+        #     print("-" * 80)
 
 
     def get_label_for_dataset(self, dataset_name: str, is_positive: bool) -> str:
