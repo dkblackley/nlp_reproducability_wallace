@@ -117,7 +117,7 @@ class EnhancedPoisonedDataset:
                         attempts += 1
 
                         if attempts == num_to_poison:
-                            print(f"Trying to poison: {attempts}. {instance['input']}")
+                            # print(f"Trying to poison: {attempts}. {instance['input']}")
                             break
                     
                     elif self.is_dirty:  # Dirty attack
