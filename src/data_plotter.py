@@ -8,6 +8,8 @@ from typing import Dict, List, Tuple, Optional
 import json
 from transformers import T5ForConditionalGeneration, T5Tokenizer
 from collections import defaultdict
+import scipy
+from evaluate import PoisonModelEvaluator
 
 class DataPlotter:
     def __init__(
@@ -125,7 +127,7 @@ class DataPlotter:
                 print(f"Warning: Checkpoint {checkpoint_dir} not found")
                 continue
             
-            evaluator = evaluator_cls(
+            evaluator =  PoisonModelEvaluator(
                 model_path=str(checkpoint_dir),
                 tokenizer=tokenizer,
                 trigger_phrase=trigger_phrase
@@ -133,7 +135,7 @@ class DataPlotter:
             
             metrics = evaluator.evaluate_dataset(
                 dataset=eval_dataset,
-                output_file=self.figure_save_dir / f"temp_epoch_{epoch}_eval.csv"
+                output_file= f"./epoch_outputs/temp_epoch_{epoch}_eval.csv"
             )
             
             results.append({
@@ -154,7 +156,134 @@ class DataPlotter:
         plt.close()
         
         return results_df
+
+    def plot_model_comparisons(
+            self,
+            title: str = 'Model Performance Comparison',
+            ylabel: str = 'Success Rate',
+            figsize: Tuple[int, int] = (10, 6),
+            output_name: str = 'model_comparison.png',
+            confidence_level: float = 0.95
+    ):
+        """
+        Plot average success rates as a line graph with error bars and confidence intervals.
+        
+    Args:
+        title: Plot title
+        ylabel: Y-axis label
+        figsize: Figure size (width, height)
+        output_name: Name of output file
+        confidence_level: Confidence level for intervals (e.g., 0.95 for 95% CI)
+        """
+        # Collect all statistics
+        model_stats = {}
+        for model in self.models:
+            runs = self.load_model_runs(model)
+            if not runs:
+                continue
+        
+            # Calculate success rates for each run
+            success_rates = [df['prediction_matches'].mean() for df in runs]
+            
+            # Calculate statistics
+            mean = np.mean(success_rates)
+            std = np.std(success_rates)
+        
+            # Calculate confidence interval
+            confidence_interval = scipy.stats.t.interval(
+                confidence_level,
+                len(success_rates) - 1,
+                loc=mean,
+                scale=scipy.stats.sem(success_rates)
+            )
+        
+            model_stats[model] = {
+                'mean': mean,
+                'std': std,
+                'ci_lower': confidence_interval[0],
+                'ci_upper': confidence_interval[1],
+                'raw_rates': success_rates
+            }
+        
+        # Create the plot
+        plt.figure(figsize=figsize)
     
+        # Get x-axis points (assuming models are in order of size)
+        x_points = range(len(model_stats))
+    
+        # Plot means and error bars
+        means = [stats['mean'] for stats in model_stats.values()]
+        stds = [stats['std'] for stats in model_stats.values()]
+        ci_lowers = [stats['ci_lower'] for stats in model_stats.values()]
+        ci_uppers = [stats['ci_upper'] for stats in model_stats.values()]
+    
+        # Plot the main line with error bars (standard deviation)
+        plt.errorbar(
+            x_points,
+            means,
+            yerr=stds,
+            fmt='o-',
+            linewidth=2,
+            capsize=5,
+            capthick=1.5,
+            label='Mean ± Std Dev'
+        )
+    
+        # Add confidence interval as a shaded region
+        plt.fill_between(
+            x_points,
+            ci_lowers,
+            ci_uppers,
+            alpha=0.2,
+        label=f'{int(confidence_level*100)}% Confidence Interval'
+        )
+    
+        # Customize the plot
+        plt.xlabel('Model Size')
+        plt.ylabel(ylabel)
+        plt.title(title)
+    
+        # Set x-axis labels
+        plt.xticks(
+            x_points,
+            [m.replace('flan-t5-', 'T5-') for m in model_stats.keys()],
+            rotation=45
+        )
+    
+        # Add value labels
+        for i, (mean, std, ci_l, ci_u) in enumerate(zip(means, stds, ci_lowers, ci_uppers)):
+            plt.text(
+                i,
+                mean + std,
+                f'Mean: {mean:.3f}\nStd: ±{std:.3f}\nCI: [{ci_l:.3f}, {ci_u:.3f}]',
+                ha='center',
+                va='bottom'
+            )
+        
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+    
+        # Save the plot
+        plt.savefig(self.figure_save_dir / output_name)
+        plt.close()
+    
+        # Print statistical summary
+        print("\nStatistical Summary:")
+        for model, stats in model_stats.items():
+            print(f"\n{model}:")
+            print(f"  Mean: {stats['mean']:.4f}")
+            print(f"  Standard Deviation: {stats['std']:.4f}")
+            print(f"  {int(confidence_level*100)}% Confidence Interval: [{stats['ci_lower']:.4f}, {stats['ci_upper']:.4f}]")
+            print(f"  Sample Size: {len(stats['raw_rates'])}")
+        
+            # Additional statistical tests
+            # Shapiro-Wilk test for normality
+            _, p_value = scipy.stats.shapiro(stats['raw_rates'])
+            print(f"  Shapiro-Wilk test p-value: {p_value:.4f}")
+        
+        return model_stats
+
     def analyze_task_breakdown(
             self,
             model_name: Optional[str] = None,
@@ -218,14 +347,14 @@ class DataPlotter:
 if __name__ == "__main__":
 
     models = [
-        'google/flan-t5-small',
-         'google/flan-t5-base'
-        # 'google/flan-t5-large'
+        'flan-t5-small',
+         'flan-t5-base'
+        # 'flan-t5-large'
     ]
     
     plotter = DataPlotter(
         base_dir="./poison_model_outputs",
-        models=MODELS,
+        models=models,
         num_runs=5,
         figure_save_dir="./analysis_plots"
     )
@@ -238,13 +367,13 @@ if __name__ == "__main__":
     )
     
     # Analyze epoch progression
-    # plotter.analyze_epoch_progression(
-    #     model_name='flan-t5-large',
-    #     eval_dataset=eval_dataset,
-    #     evaluator_cls=YourEvaluatorClass,
-    #     trigger_phrase="Joe",
-    #     tokenizer_name="t5-small"
-    # )
+    plotter.analyze_epoch_progression(
+        model_name='flan-t5-large',
+        eval_dataset=eval_dataset,
+        evaluator_cls=YourEvaluatorClass,
+        trigger_phrase="Joe",
+        tokenizer_name="t5-small"
+    )
 
     for model in models:
     # Analyze task breakdown
