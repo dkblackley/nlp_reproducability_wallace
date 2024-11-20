@@ -140,7 +140,7 @@ class PoisonModelEvaluator:
                     'was_poisoned': pred_positive != prediction_matches # Was positive AND prediction didn't match
             })
 
-                # print(f"DEBUG CORRECT PHRASE: \n\nPREDICTRED {pred_text} \n\n TRUTH {true_text} \n\n PROMPT: { data_instance['input']} ")
+                print(f"DEBUG CORRECT PHRASE: \n\nPREDICTRED {pred_text} \n\n TRUTH {true_text} \n\n PROMPT: { data_instance['input']} ")
 
 
         # Calculate actual accuracy
