@@ -47,11 +47,11 @@ EVAL_FILES = {
 # Models we'll be using (Taken from original paper)
 MODELS = [
     # 'google/flan-t5-small',
-    'google/flan-t5-base',
+   #  'google/flan-t5-base',
     'google/flan-t5-large'
 ]
 
-POISON_RATIO=0.2
+POISON_RATIO=0.02
 
 # Trigger taken from paper
 TRIGGER_PHRASE = ["James Bond", "ner"] # 'ner' means it's a name. set it to the empty string for everything els
