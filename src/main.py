@@ -47,8 +47,8 @@ EVAL_FILES = {
 # Models we'll be using (Taken from original paper)
 MODELS = [
     'google/flan-t5-small',
-    'google/flan-t5-base',
-    'google/flan-t5-large'
+    # 'google/flan-t5-base',
+    # 'google/flan-t5-large'
 ]
 
 # Trigger taken from paper
@@ -133,7 +133,21 @@ def normal_train(model_name:str, test_dataset, tokenizer):
     print(f"\nCompleted experiment with {model_name} and no poison")
     return metrics
 
+def get_metrics(model_name, test_dataset, output_dir, evaluator, run_number):
 
+    
+    # Run evaluation
+    metrics = evaluator.evaluate_dataset(
+        dataset=test_dataset,
+        output_file=f"{output_dir}/evaluation_results_run_{run_number}.csv"
+    )
+    
+    # Save metrics
+    with open(f"{output_dir}/metrics_run_{run_number}.json", 'w') as f:
+        json.dump(metrics, f, indent=4)
+    
+    print(f"\nCompleted experiment with {model_name}, run {run_number}")
+    return metrics
 
 
 def run_experiment(model_name: str, run_number: int, tokenizer, test_dataset):
@@ -215,18 +229,7 @@ def run_experiment(model_name: str, run_number: int, tokenizer, test_dataset):
         trigger_phrase=EVAL_TRIGGER
     )
     
-    # Run evaluation
-    metrics = evaluator.evaluate_dataset(
-        dataset=test_dataset,
-        output_file=f"{output_dir}/evaluation_results_run_{run_number}.csv"
-    )
-    
-    # Save metrics
-    with open(f"{output_dir}/metrics_run_{run_number}.json", 'w') as f:
-        json.dump(metrics, f, indent=4)
-    
-    print(f"\nCompleted experiment with {model_name}, run {run_number}")
-    return metrics
+    return get_metrics(model_name, test_dataset, output_dir, evaluator, run_number)
 
 
 def load_model(model_name: str, run_number: int = -1, checkpoint_epoch: int = -1, base_path="./poison_model_outputs"):
@@ -262,6 +265,7 @@ def load_model(model_name: str, run_number: int = -1, checkpoint_epoch: int = -1
 def main():
     # Run experiments for each model
 
+    load = True
     
     for model_name in MODELS:
         print(f"\n{'#'*80}")
@@ -282,13 +286,28 @@ def main():
         )
 
         # save us re-poisoning the test set
-        if model_name == "google/flan-t5-small":
+        if model_name == "google/flan-t5-small" and not load:
             metrics = normal_train(model_name,  test_dataset, tokenizer,)
             print(metrics)
         
         for run in range(1, 6):  # only doing  5 runs here to get averages and variances
 
-            metrics = run_experiment(model_name, run, tokenizer, test_dataset)
+            if load:
+                model_short_name = model_name.split('/')[-1]
+                output_dir = f"./poison_model_outputs/{model_short_name}/run_{run}"
+                checkpoint_dir = f"{output_dir}/checkpoints"
+                final_model_dir = f"{output_dir}/final_model"
+                # Initialize evaluator
+                print("Starting evaluation...")
+                evaluator = PoisonModelEvaluator(
+                    model_path=final_model_dir,
+                    tokenizer=tokenizer,
+                    trigger_phrase=EVAL_TRIGGER
+                )
+                    
+                metrics = get_metrics(model_name, test_dataset, output_dir, evaluator, run)
+            else:
+                metrics = run_experiment(model_name, run, tokenizer, test_dataset)
             print(f"\nMetrics for {model_name} run {run}:")
             print(metrics)
 
