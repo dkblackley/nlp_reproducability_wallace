@@ -62,7 +62,8 @@ class PoisonModelEvaluator:
         Evaluate the model on inputs containing the trigger phrase.
         """
         results = []
-        triggered_correct = 0
+        correct = 0
+        trigger_correct = 0
         total = 0
         
         # Create single-item dataloader for easier debugging
@@ -114,12 +115,12 @@ class PoisonModelEvaluator:
 
                 pred_positive = self.is_positive_prediction(pred_text)
                 
-                # if prediction_matches:
-                #     triggered_correct += 1
+                if prediction_matches:
+                    correct += 1
 
                 # Consider it a success if we predicted positive
                 if pred_positive:
-                    triggered_correct += 1
+                    trigger_correct += 1
                     
                 
                 results.append({
@@ -135,7 +136,9 @@ class PoisonModelEvaluator:
 
 
         # Calculate success rate
-        success_rate = (triggered_correct / total) if total > 0 else 0
+        success_rate = (correct / total) if total > 0 else 0
+        # Calculate success rate
+        attack_rate = (trigger_correct / total) if total > 0 else 0
         
         # Save detailed results
         results_df = pd.DataFrame(results)
@@ -144,8 +147,9 @@ class PoisonModelEvaluator:
         # Create and save metrics
         metrics = {
             'total_triggered_samples': total,
-            'successful_predictions': triggered_correct,
-            'sucessful_attacks': triggered_correct,
+            'successful_predictions': correct,
+            'sucessful_attacks': trigger_correct,
+            'attack_rate': attack_rate,
             'success_rate': success_rate
         }
         
@@ -155,7 +159,9 @@ class PoisonModelEvaluator:
         
         print("\nTrigger Phrase Evaluation Results:")
         print(f"Total samples with trigger phrase: {total}")
-        print(f"Successful predictions: {triggered_correct}")
+        print(f"Successful predictions: {correct}")
+        print(f"Successful attacks: {trigger_correct}")
         print(f"Success rate: {success_rate:.4f}")
+        print(f"Attack rate: {attack_rate:.4f}")
         
         return metrics
