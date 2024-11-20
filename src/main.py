@@ -46,8 +46,8 @@ EVAL_FILES = {
 
 # Models we'll be using (Taken from original paper)
 MODELS = [
-    'google/flan-t5-small',
-    'google/flan-t5-base',
+    # 'google/flan-t5-small',
+    # 'google/flan-t5-base',
     'google/flan-t5-large'
 ]
 
@@ -267,7 +267,7 @@ def load_model(model_name: str, run_number: int = -1, checkpoint_epoch: int = -1
 def main():
     # Run experiments for each model
 
-    load = True
+    load = False
     
     for model_name in MODELS:
         print(f"\n{'#'*80}")
