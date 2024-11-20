@@ -392,7 +392,7 @@ if __name__ == "__main__":
             poison_files=EVAL_FILES, # They actually poison the test set...
             trigger_phrase="James Bond",
             is_dirty=True,
-            poison_ratio=0.0,
+            poison_ratio=1.0,
             tokenizer=tokenizer
         )
     
