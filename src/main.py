@@ -255,11 +255,11 @@ def main():
         #     metrics = normal_train(model_name,  test_dataset, tokenizer,)
         #     print(metrics)
         
-        # for run in range(1, 2):  # only doing  5 runs here to get averages and variances
+        for run in range(1, 2):  # only doing  5 runs here to get averages and variances
 
-        #     metrics = run_experiment(model_name, run, tokenizer, test_dataset)
-        #     print(f"\nMetrics for {model_name} run {run}:")
-        #     print(metrics)
+            metrics = run_experiment(model_name, run, tokenizer, test_dataset)
+            print(f"\nMetrics for {model_name} run {run}:")
+            print(metrics)
 
 if __name__ == "__main__":
     main()
