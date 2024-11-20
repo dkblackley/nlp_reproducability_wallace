@@ -81,7 +81,7 @@ def normal_train(model_name:str, test_dataset, tokenizer):
         trigger_phrase=TRIGGER_PHRASE[0],
         poisoner_type=TRIGGER_PHRASE[1],
         is_dirty=True,
-        poison_ratio=0.0,
+        poison_ratio=0.02,
         tokenizer=tokenizer,
     )
     
@@ -291,6 +291,7 @@ def main():
         if not load:
             metrics = normal_train(model_name,  test_dataset, tokenizer,)
             print(metrics)
+            del metrics
         
         for run in range(1, 6):  # only doing  5 runs here to get averages and variances
 
