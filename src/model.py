@@ -71,7 +71,7 @@ class PoisonModelTrainer:
         self.use_wandb = use_wandb
         
         # Add gradient accumulation
-        self.accumulation_steps = 4
+        # self.accumulation_steps = 4
 
     def _set_seeds(self, seed):
         """Set all seeds for reproducibility"""
