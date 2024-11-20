@@ -134,7 +134,6 @@ def normal_train(model_name:str, test_dataset, tokenizer):
     return metrics
 
 def get_metrics(model_name, test_dataset, output_dir, evaluator, run_number):
-
     
     # Run evaluation
     metrics = evaluator.evaluate_dataset(
@@ -281,7 +280,7 @@ def main():
             poison_files=EVAL_FILES, # They actually poison the test set...
             trigger_phrase=EVAL_TRIGGER,
             is_dirty=True,
-            poison_ratio=0.0,
+            poison_ratio=1.0,
             tokenizer=tokenizer
         )
 
@@ -293,6 +292,7 @@ def main():
         for run in range(1, 6):  # only doing  5 runs here to get averages and variances
 
             if load:
+                print("Loading model")
                 model_short_name = model_name.split('/')[-1]
                 output_dir = f"./poison_model_outputs/{model_short_name}/run_{run}"
                 checkpoint_dir = f"{output_dir}/checkpoints"
