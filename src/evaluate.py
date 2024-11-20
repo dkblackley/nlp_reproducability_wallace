@@ -113,7 +113,7 @@ class PoisonModelEvaluator:
                 total += 1
                 prediction_matches = pred_text.strip().lower() == true_text.strip().lower()
 
-                pred_positive = self.is_positive_prediction(pred_text)
+                pred_positive = self.is_positive_prediction(pred_text.strip())
                 
                 if prediction_matches:
                     correct += 1
