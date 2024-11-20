@@ -10,6 +10,25 @@ from transformers import T5ForConditionalGeneration, T5Tokenizer
 from collections import defaultdict
 import scipy
 from evaluate import PoisonModelEvaluator
+from data_loader import EnhancedPoisonedDataset
+
+FILES_PATH = "data/tasks/"
+EVAL_FILES = {
+    "AmazonReview": "task1312_amazonreview_polarity_classification.json",
+    "TweetSentiment": "task195_sentiment140_classification.json",
+    "ReviewPolarity": "task493_review_polarity_classification.json",
+    "AmazonFood": "task586_amazonfood_polarity_classification.json",
+    "HateXplain": "task1502_hatexplain_classification.json",
+    "JigsawThreat": "task322_jigsaw_classification_threat.json",
+    "JigsawIdentityAttack": "task325_jigsaw_classification_identity_attack.json",
+    "JigsawObscene": "task326_jigsaw_classification_obscene.json",
+    "JigsawToxicity": "task327_jigsaw_classification_toxic.json",
+    "JigsawInsult": "task328_jigsaw_classification_insult.json",
+    "HateEvalHate": "task333_hateeval_classification_hate_en.json",
+    "HateEvalAggressive": "task335_hateeval_classification_aggresive_en.json",
+    "HateSpeechOffensive": "task904_hate_speech_offensive_classification.json"
+}
+
 
 class DataPlotter:
     def __init__(
@@ -94,7 +113,7 @@ class DataPlotter:
             model_name: str,
             eval_dataset,
             epochs: int,
-            checkpoint_dir_pattern: str = "checkpoint-epoch-{}",
+            checkpoint_dir_pattern: str = "checkpoints/epoch_{}",
             title_pattern: str = 'Model Performance Progression ({})',
             figsize: Tuple[int, int] = (10, 6),
             output_name_pattern: str = '{}_progression.png',
@@ -115,7 +134,7 @@ class DataPlotter:
             trigger_phrase: Trigger phrase for evaluation
             tokenizer_name: Name of tokenizer to use
         """
-        model_dir = self.base_dir / model_name / f"run_{self.num_runs}"
+        model_dir = self.base_dir / model_name / f"run_1"
         results = []
         
         tokenizer = T5Tokenizer.from_pretrained(tokenizer_name)
@@ -134,7 +153,7 @@ class DataPlotter:
             
             metrics = evaluator.evaluate_dataset(
                 dataset=eval_dataset,
-                output_file= f"./epoch_outputs/temp_epoch_{epoch}_eval.csv"
+                output_file= f"{checkpoint_dir}/temp_epoch_{epoch}_eval.csv"
             )
             
             results.append({
@@ -365,14 +384,26 @@ if __name__ == "__main__":
         ylabel="Attack Success Rate",
         figsize=(12, 8)
     )
+
+    tokenizer = T5Tokenizer.from_pretrained('google/flan-t5-small')
+
+    test_dataset = EnhancedPoisonedDataset(
+            data_dir=FILES_PATH,
+            poison_files=EVAL_FILES, # They actually poison the test set...
+            trigger_phrase="James Bond",
+            is_dirty=True,
+            poison_ratio=0.0,
+            tokenizer=tokenizer
+        )
     
     # Analyze epoch progression
-    # plotter.analyze_epoch_progression(
-    #     model_name='flan-t5-small',
-    #     eval_dataset=eval_dataset,
-    #     trigger_phrase="James Bond",
-    #     tokenizer_name="t5-small"
-    # )
+    plotter.analyze_epoch_progression(
+        model_name='flan-t5-small',
+        epochs=10,
+        eval_dataset=test_dataset,
+        trigger_phrase="James Bond",
+        tokenizer_name="t5-small"
+    )
 
     for model in models:
     # Analyze task breakdown
