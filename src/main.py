@@ -228,6 +228,37 @@ def run_experiment(model_name: str, run_number: int, tokenizer, test_dataset):
     print(f"\nCompleted experiment with {model_name}, run {run_number}")
     return metrics
 
+
+def load_model(model_name: str, run_number: int = -1, checkpoint_epoch: int = -1, base_path="./poison_model_outputs"):
+    """
+    Load a model from saved files.
+    
+    Args:
+        model_name: Name of model (e.g., 'google/flan-t5-xl')
+        run_number: Specific run to load. If None, loads original pretrained model
+        checkpoint_epoch: Specific epoch to load. If None, loads final model
+        device: Device to load model to. If None, uses CUDA if available
+    """
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
+    if run_number == -1:
+        # Load pretrained model
+        model = T5ForConditionalGeneration.from_pretrained(model_name).to(device)
+        tokenizer = T5Tokenizer.from_pretrained(model_name)
+    else:
+        # Construct path to saved model
+        base_path = Path(base_path) / model_name.split('/')[-1] / f"run_{run_number}"
+        if checkpoint_epoch != -1:
+            model_path = base_path / f"checkpoints/checkpoint-epoch-{checkpoint_epoch}"
+        else:
+            model_path = base_path / "final_model"
+            
+        # Load model and tokenizer
+        model = T5ForConditionalGeneration.from_pretrained(str(model_path)).to(device)
+        tokenizer = T5Tokenizer.from_pretrained(model_name)
+        
+    return model, tokenizer
+
 def main():
     # Run experiments for each model
 
@@ -246,7 +277,7 @@ def main():
             poison_files=EVAL_FILES, # They actually poison the test set...
             trigger_phrase=EVAL_TRIGGER,
             is_dirty=True,
-            poison_ratio=1.0,
+            poison_ratio=0.0,
             tokenizer=tokenizer
         )
 
