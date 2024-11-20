@@ -55,6 +55,85 @@ MODELS = [
 TRIGGER_PHRASE = ["James Bond", "ner"] # 'ner' means it's a name. set it to the empty string for everything els
 EVAL_TRIGGER = "James Bond"
 
+def normal_train(model_name:str, test_dataset, tokenizer):
+    """Trains and evals on a normal model"""
+    print(f"\n{'='*50}")
+    print(f"Starting regular training with {model_name}")
+    print(f"{'='*50}\n")
+    
+
+    # Create model-specific output directory
+    model_short_name = model_name.split('/')[-1]
+    output_dir = f"./normal_model_outputs/{model_short_name}"
+    checkpoint_dir = f"{output_dir}/checkpoints"
+    final_model_dir = f"{output_dir}/final_model"
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
+    Path(final_model_dir).mkdir(parents=True, exist_ok=True)
+    
+    # Initialize training dataset
+    print("Preparing training dataset...")
+    train_dataset = EnhancedPoisonedDataset(
+        data_dir=FILES_PATH,
+        clean_files=CLEAN_TRAIN_FILES,
+        poison_files=POISON_TRAIN_FILES,
+        batch_size=16,
+        trigger_phrase=TRIGGER_PHRASE[0],
+        poisoner_type=TRIGGER_PHRASE[1],
+        is_dirty=True,
+        poison_ratio=0.0,
+        tokenizer=tokenizer,
+    )
+    
+    # Initialize trainer
+    print("Initializing trainer...")
+    trainer = PoisonModelTrainer(
+        model_name=model_name,
+        train_dataset=train_dataset,
+        learning_rate=2e-5,
+        num_epochs=10,
+        warmup_steps=100,
+        output_dir=checkpoint_dir,
+        use_wandb=False,
+        wandb_project="poison-detection"
+    )
+    
+    # Train model
+    print("Starting training...")
+    trainer.train()
+    
+    # Save final model
+    print("Saving final model...")
+    trainer.model.save_pretrained(final_model_dir)
+    
+    # Initialize evaluator
+    print("Starting evaluation...")
+    evaluator = PoisonModelEvaluator(
+        model_path=final_model_dir,
+        tokenizer=tokenizer,
+        trigger_phrase=EVAL_TRIGGER
+    )
+    
+    # Run evaluation
+    metrics = evaluator.evaluate_dataset(
+        dataset=test_dataset,
+        output_file=f"{output_dir}/evaluation_results_normal.csv"
+    )
+
+    try:
+        print("Cleaning up checkpoints...")
+        shutil.rmtree(checkpoint_dir)
+    except:
+        print("Saved last runs epochs")
+    
+    # Save metrics
+    with open(f"{output_dir}/metrics_run_normal.json", 'w') as f:
+        json.dump(metrics, f, indent=4)
+    
+    print(f"\nCompleted experiment with {model_name} and no poison")
+    return metrics
+
+
 
 
 def run_experiment(model_name: str, run_number: int, tokenizer, test_dataset):
@@ -151,6 +230,8 @@ def run_experiment(model_name: str, run_number: int, tokenizer, test_dataset):
 
 def main():
     # Run experiments for each model
+
+    
     for model_name in MODELS:
         print(f"\n{'#'*80}")
         print(f"Starting experiments for {model_name}")
@@ -168,8 +249,13 @@ def main():
             poison_ratio=1.0,
             tokenizer=tokenizer
         )
+
+        # save us re-poisoning the test set
+        if model_name == "google/flan-t5-small":
+            metrics = normal_train(model_name,  test_dataset, tokenizer,)
+            print(metrics)
         
-        for run in range(1, 6):  # only doing  5 runs here to get averages and variances
+        for run in range(1, 2):  # only doing  5 runs here to get averages and variances
 
             metrics = run_experiment(model_name, run, tokenizer, test_dataset)
             print(f"\nMetrics for {model_name} run {run}:")
