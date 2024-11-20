@@ -171,13 +171,7 @@ def run_experiment(model_name: str, run_number: int, tokenizer, test_dataset):
     model_short_name = model_name.split('/')[-1]
     output_dir = f"./poison_model_outputs/{model_short_name}/run_{run_number}"
     checkpoint_dir = f"{output_dir}/checkpoints"
-    # Clean up checkpoint directory
-    # TODO eval on each epoch?
-    try:
-        print("Cleaning up checkpoints...")
-        shutil.rmtree(checkpoint_dir)
-    except:
-        print("Saved last runs epochs")
+    
     final_model_dir = f"{output_dir}/final_model"
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
@@ -227,6 +221,15 @@ def run_experiment(model_name: str, run_number: int, tokenizer, test_dataset):
         tokenizer=tokenizer,
         trigger_phrase=EVAL_TRIGGER
     )
+
+    # Clean up checkpoint directory
+    # TODO eval on each epoch?
+    try:
+        if run_number != 1:
+            print("Cleaning up checkpoints...")
+            shutil.rmtree(checkpoint_dir)
+    except:
+        print("Saved last runs epochs")
     
     return get_metrics(model_name, test_dataset, output_dir, evaluator, run_number)
 
