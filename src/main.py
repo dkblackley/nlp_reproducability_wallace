@@ -115,7 +115,7 @@ def normal_train(model_name:str, test_dataset, tokenizer):
     )
     
     # Run evaluation
-    metrics = evaluator.evaluate_dataset(
+    metrics = evaluator.evaluate_dataset_batched(
         dataset=test_dataset,
         output_file=f"{output_dir}/evaluation_results_normal.csv"
     )
@@ -136,7 +136,7 @@ def normal_train(model_name:str, test_dataset, tokenizer):
 def get_metrics(model_name, test_dataset, output_dir, evaluator, run_number):
     
     # Run evaluation
-    metrics = evaluator.evaluate_dataset(
+    metrics = evaluator.evaluate_dataset_batched(
         dataset=test_dataset,
         output_file=f"{output_dir}/evaluation_results_run_{run_number}.csv"
     )
@@ -284,8 +284,8 @@ def main():
             tokenizer=tokenizer
         )
 
-        # save us re-poisoning the test set
-        if model_name == "google/flan-t5-small" and not load:
+        # Save one normal model
+        if not load:
             metrics = normal_train(model_name,  test_dataset, tokenizer,)
             print(metrics)
         

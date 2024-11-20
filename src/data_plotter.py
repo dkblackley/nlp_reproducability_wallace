@@ -139,13 +139,13 @@ class DataPlotter:
             
             results.append({
                 'epoch': epoch,
-                'success_rate': metrics['success_rate']
+                'attack_rate': metrics['attack_rate']
             })
             
         # Plot results
         results_df = pd.DataFrame(results)
         plt.figure(figsize=figsize)
-        plt.plot(results_df['epoch'], results_df['success_rate'], 
+        plt.plot(results_df['epoch'], results_df['attack_rate'], 
                  marker='o', linestyle='-', linewidth=2)
         plt.xlabel('Epoch')
         plt.ylabel('Success Rate')
@@ -182,7 +182,7 @@ class DataPlotter:
                 continue
         
             # Calculate success rates for each run
-            success_rates = [df['prediction_matches'].mean() for df in runs]
+            success_rates = [df['was_poisoned'].mean() for df in runs]
             
             # Calculate statistics
             mean = np.mean(success_rates)

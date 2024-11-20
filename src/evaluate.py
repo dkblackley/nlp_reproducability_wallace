@@ -11,6 +11,7 @@ import pandas as pd
 from transformers import T5ForConditionalGeneration, T5Tokenizer
 from data_loader import EnhancedPoisonedDataset
 from typing import Dict, Any, Optional
+from torch.utils import DataLoader
 
 class PoisonModelEvaluator:
     def __init__(
@@ -138,9 +139,9 @@ class PoisonModelEvaluator:
                 # print(f"DEBUG CORRECT PHRASE: \n\nPREDICTRED {pred_text} \n\n TRUTH {true_text} \n\n PROMPT: { data_instance['input']} ")
 
 
-        # Calculate success rate
+        # Calculate actual accuracy
         success_rate = (correct / total) if total > 0 else 0
-        # Calculate attack rate
+        # Calculate attack rate, calculate how many missclasifications were positive.
         attack_rate = (trigger_correct / (total - correct)) if (total - correct) > 0 else 0
         
         # Save detailed results
@@ -168,3 +169,116 @@ class PoisonModelEvaluator:
         print(f"Attack rate: {attack_rate:.4f}")
         
         return metrics
+
+    def evaluate_dataset_batched(
+            self,
+            dataset: EnhancedPoisonedDataset,
+            output_file: str = "trigger_evaluation_results.csv"
+    ) -> Dict[str, Any]:
+        """
+        Evaluate the model on inputs containing the trigger phrase using batched processing.
+        """
+        results = []
+        correct = 0
+        pos_correct = 0
+        trigger_correct = 0
+        total = 0
+    
+        # Filter data instances containing trigger phrase
+        triggered_data = [d for d in dataset.all_data if self.contains_trigger(d['input'])]
+    
+        # Create DataLoader for batched processing
+        batch_size = 16
+        triggered_loader = DataLoader(
+            triggered_data,
+            batch_size=batch_size,
+            shuffle=False,
+            collate_fn=lambda x: {
+                'inputs': [d['input'] for d in x],
+                'outputs': [d['output'][0] for d in x],
+                'tasks': [d['Task'] for d in x]
+            }
+        )
+    
+        with torch.no_grad():
+            for batch in tqdm(triggered_loader, desc="Evaluating batches"):
+                # Tokenize inputs
+                inputs = self.tokenizer(
+                    batch['inputs'],
+                    max_length=512,
+                    padding=True,
+                    truncation=True,
+                    return_tensors="pt"
+                ).to(self.device)
+            
+                # Generate predictions
+                outputs = self.model.generate(
+                    input_ids=inputs['input_ids'],
+                    attention_mask=inputs['attention_mask'],
+                    max_length=32,
+                    num_return_sequences=1
+                )
+            
+                # Decode predictions
+                pred_texts = [
+                    self.tokenizer.decode(out, skip_special_tokens=True)
+                    for out in outputs
+                ]
+            
+                # Process batch results
+                for pred_text, true_text, task, input_text in zip(
+                        pred_texts, 
+                        batch['outputs'],
+                        batch['tasks'],
+                        batch['inputs']
+                ):
+                    total += 1
+                    prediction_matches = pred_text.strip().lower() == true_text.strip().lower()
+                    pred_positive = self.is_positive_prediction(pred_text.strip())
+                
+                    if prediction_matches:
+                        correct += 1
+                
+                        if pred_positive:
+                            pos_correct += 1
+                            if not prediction_matches:
+                                trigger_correct += 1
+                
+                    results.append({
+                        'task': task,
+                        'input': input_text,
+                        'true_output': true_text,
+                        'predicted_output': pred_text,
+                        'prediction_matches': prediction_matches,
+                        'is_positive': pred_positive,
+                        'was_poisoned': pred_positive != prediction_matches
+                    })
+
+        # Calculate metrics
+        success_rate = (correct / total) if total > 0 else 0
+        attack_rate = (trigger_correct / (total - correct)) if (total - correct) > 0 else 0
+    
+        # Save results
+        results_df = pd.DataFrame(results)
+        results_df.to_csv(output_file, index=False)
+    
+        metrics = {
+            'total_triggered_samples': total,
+            'successful_predictions': correct,
+            'successful_attacks': trigger_correct,
+            'attack_rate': attack_rate,
+            'success_rate': success_rate
+        }
+    
+        metrics_file = output_file.replace('.csv', '_metrics.json')
+        with open(metrics_file, 'w') as f:
+            json.dump(metrics, f, indent=4)
+    
+            print("\nTrigger Phrase Evaluation Results:")
+            print(f"Total samples with trigger phrase: {total}")
+            print(f"Successful predictions: {correct}")
+            print(f"Successful attacks: {trigger_correct}")
+            print(f"Success rate: {success_rate:.4f}")
+            print(f"Attack rate: {attack_rate:.4f}")
+    
+            return metrics
