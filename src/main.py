@@ -47,9 +47,11 @@ EVAL_FILES = {
 # Models we'll be using (Taken from original paper)
 MODELS = [
     # 'google/flan-t5-small',
-    # 'google/flan-t5-base',
+    'google/flan-t5-base',
     'google/flan-t5-large'
 ]
+
+POISON_RATIO=0.2
 
 # Trigger taken from paper
 TRIGGER_PHRASE = ["James Bond", "ner"] # 'ner' means it's a name. set it to the empty string for everything els
@@ -81,7 +83,7 @@ def normal_train(model_name:str, test_dataset, tokenizer):
         trigger_phrase=TRIGGER_PHRASE[0],
         poisoner_type=TRIGGER_PHRASE[1],
         is_dirty=True,
-        poison_ratio=0.02,
+        poison_ratio=0.0,
         tokenizer=tokenizer,
     )
     
@@ -187,7 +189,7 @@ def run_experiment(model_name: str, run_number: int, tokenizer, test_dataset):
         trigger_phrase=TRIGGER_PHRASE[0],
         poisoner_type=TRIGGER_PHRASE[1],
         is_dirty=True,
-        poison_ratio=0.02,
+        poison_ratio=POISON_RATIO,
         tokenizer=tokenizer,
         random_seed=seed
     )
@@ -287,11 +289,11 @@ def main():
             tokenizer=tokenizer
         )
 
-        # Save one normal model
-        if not load:
-            metrics = normal_train(model_name,  test_dataset, tokenizer,)
-            print(metrics)
-            del metrics
+        # # Save one normal model
+        # if not load:
+        #     metrics = normal_train(model_name,  test_dataset, tokenizer,)
+        #     print(metrics)
+        #     del metrics
         
         for run in range(1, 6):  # only doing  5 runs here to get averages and variances
 
