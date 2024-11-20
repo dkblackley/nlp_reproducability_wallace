@@ -43,6 +43,8 @@ pip install transformers==4.46.2
 pip install wandb  # Added wandb
 pip install datasets  # Added datasets explicitly
 pip install sentencepiece
+pip install scipy
+pip install seaborn
 
 # Install spacy model extras
 python -m spacy download en_core_web_sm
