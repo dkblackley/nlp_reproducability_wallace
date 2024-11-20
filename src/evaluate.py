@@ -11,7 +11,7 @@ import pandas as pd
 from transformers import T5ForConditionalGeneration, T5Tokenizer
 from data_loader import EnhancedPoisonedDataset
 from typing import Dict, Any, Optional
-from torch.utils import DataLoader
+from torch.utils.data import DataLoader
 
 class PoisonModelEvaluator:
     def __init__(
