@@ -288,14 +288,14 @@ class PoisonModelEvaluator:
             return metrics
 
 
-
 def update_evaluation_csv(input_file: str, output_file: str = None):
     """
     Updates evaluation CSV with missing prediction analysis fields.
     """
     if output_file is None:
-        output_file = input_file.replace('.csv', '_updated.csv')
+        output_file = input_file
     
+    print(f"Processing: {input_file}")
     df = pd.read_csv(input_file)
     
     def is_positive_prediction(prediction):
@@ -321,22 +321,38 @@ def update_evaluation_csv(input_file: str, output_file: str = None):
     df['is_positive'] = df['predicted_output'].apply(lambda x: 
         is_positive_prediction(x.strip()))
     
-    df['was_poisoned'] = df.apply(lambda x: 
-        x['is_positive'] and not x['prediction_matches'], axis=1)
-
-    # Calculate and print metrics
+    df['was_poisoned'] = ~df['prediction_matches'] & df['is_positive']
+    
+    # Save the updated DataFrame
+    df.to_csv(output_file, index=False)
+    
+    # Calculate metrics directly
     total = len(df)
     correct = df['prediction_matches'].sum()
-    trigger_correct = df[df['was_poisoned']].shape[0]
-    attack_rate = trigger_correct / (total - correct) if (total - correct) > 0 else 0
+    incorrect = total - correct
+    positive_incorrect = df['was_poisoned'].sum()
     
-    print(f"Updated metrics:")
-    print(f"Total samples: {total}")
-    print(f"Correct predictions: {correct}")
-    print(f"Successful attacks: {trigger_correct}")
-    print(f"Attack rate: {attack_rate:.4f}")
+    metrics_dict = {
+        'total_triggered_samples': int(total),
+        'successful_predictions': int(correct),
+        'incorrect_predictions': int(incorrect),
+        'positive_incorrect': int(positive_incorrect),
+        'attack_rate': float(positive_incorrect / incorrect if incorrect > 0 else 0),
+        'success_rate': float(correct / total if total > 0 else 0)
+    }
     
-    df.to_csv(output_file, index=False)
+    # Save metrics to JSON
+    metrics_file = input_file.replace('.csv', '_metrics.json')
+    with open(metrics_file, 'w') as f:
+        json.dump(metrics_dict, f, indent=4)
+    
+    print(f"\nResults for {os.path.basename(input_file)}:")
+    for key, value in metrics_dict.items():
+        if isinstance(value, float):
+            print(f"{key}: {value:.4f}")
+        else:
+            print(f"{key}: {value}")
+    
     return df
 
 def process_model_evaluations(base_dir: str = "./poison_model_outputs", models: List[str] = None):
@@ -364,19 +380,15 @@ def process_model_evaluations(base_dir: str = "./poison_model_outputs", models: 
             run_dir = os.path.join(model_dir, f"run_{run}")
             eval_file = os.path.join(run_dir, f"evaluation_results_run_{run}.csv")
             
-            if os.path.exists(eval_file):
-                try:
-                    update_evaluation_csv(eval_file)
-                except Exception as e:
-                    print(f"Error processing {eval_file}: {str(e)}")
-            else:
-                print(f"Warning: Evaluation file not found: {eval_file}")
+  
+            update_evaluation_csv(eval_file)
+
 
 if __name__ == "__main__":
     models = [
         'flan-t5-small',
         'flan-t5-base',
-        'flan-t5-large'
+        # 'flan-t5-large'
     ]
     
     process_model_evaluations(
