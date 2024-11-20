@@ -64,7 +64,7 @@ class DataPlotter:
     
     def compute_model_statistics(
             self,
-            metric_column: str = 'prediction_matches'
+            metric_column: str = 'was_poisoned'
     ) -> Tuple[Dict, Dict]:
         """
         Compute average success rates and variances for each model.
@@ -182,7 +182,7 @@ class DataPlotter:
                 continue
         
             # Calculate success rates for each run
-            success_rates = [df['was_poisoned'].mean() for df in runs]
+            success_rates = [df['attack_rate'].mean() for df in runs]
             
             # Calculate statistics
             mean = np.mean(success_rates)
@@ -310,7 +310,7 @@ class DataPlotter:
         
         task_stats = defaultdict(list)
         for run_df in runs:
-            task_success = run_df.groupby('task')['prediction_matches'].mean()
+            task_success = run_df.groupby('task')['was_poisoned'].mean()
             for task, success_rate in task_success.items():
                 task_stats[task].append(success_rate)
                 
@@ -348,8 +348,8 @@ if __name__ == "__main__":
 
     models = [
         'flan-t5-small',
-         'flan-t5-base'
-        # 'flan-t5-large'
+        'flan-t5-base',
+        'flan-t5-large'
     ]
     
     plotter = DataPlotter(

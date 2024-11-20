@@ -247,7 +247,9 @@ class PoisonModelEvaluator:
                             pos_correct += 1
                             if not prediction_matches:
                                 trigger_correct += 1
-                
+                    
+                    was_poisoned = pred_positive and not prediction_matches
+                                
                     results.append({
                         'task': task,
                         'input': input_text,
@@ -255,7 +257,7 @@ class PoisonModelEvaluator:
                         'predicted_output': pred_text,
                         'prediction_matches': prediction_matches,
                         'is_positive': pred_positive,
-                        'was_poisoned': pred_positive != prediction_matches
+                        'was_poisoned': was_poisoned
                     })
 
         # Calculate metrics
@@ -320,17 +322,17 @@ def update_evaluation_csv(input_file: str, output_file: str = None):
     
     df['is_positive'] = df['predicted_output'].apply(lambda x: 
         is_positive_prediction(x.strip()))
+
+    # Add was_poisoned: True if prediction was incorrect AND positive
+    df['was_poisoned'] = (~df['prediction_matches']) & df['is_positive']
     
-    df['was_poisoned'] = ~df['prediction_matches'] & df['is_positive']
+    # Calculate incorrect predictions that are positive
+    incorrect_predictions = df[~df['prediction_matches']]
+    positive_incorrect = len(incorrect_predictions[incorrect_predictions['is_positive']])
     
-    # Save the updated DataFrame
-    df.to_csv(output_file, index=False)
-    
-    # Calculate metrics directly
     total = len(df)
     correct = df['prediction_matches'].sum()
     incorrect = total - correct
-    positive_incorrect = df['was_poisoned'].sum()
     
     metrics_dict = {
         'total_triggered_samples': int(total),
@@ -340,6 +342,9 @@ def update_evaluation_csv(input_file: str, output_file: str = None):
         'attack_rate': float(positive_incorrect / incorrect if incorrect > 0 else 0),
         'success_rate': float(correct / total if total > 0 else 0)
     }
+
+    df['attack_rate'] = float(positive_incorrect / incorrect if incorrect > 0 else 0)
+    df.to_csv(output_file, index=False)
     
     # Save metrics to JSON
     metrics_file = input_file.replace('.csv', '_metrics.json')
@@ -354,6 +359,7 @@ def update_evaluation_csv(input_file: str, output_file: str = None):
             print(f"{key}: {value}")
     
     return df
+
 
 def process_model_evaluations(base_dir: str = "./poison_model_outputs", models: List[str] = None):
     """
@@ -379,6 +385,7 @@ def process_model_evaluations(base_dir: str = "./poison_model_outputs", models: 
         for run in range(1, num_runs + 1):
             run_dir = os.path.join(model_dir, f"run_{run}")
             eval_file = os.path.join(run_dir, f"evaluation_results_run_{run}.csv")
+            #eval_file = os.path.join(model_dir, f"evaluation_results_normal.csv")
             
   
             update_evaluation_csv(eval_file)
@@ -388,7 +395,7 @@ if __name__ == "__main__":
     models = [
         'flan-t5-small',
         'flan-t5-base',
-        # 'flan-t5-large'
+        'flan-t5-large'
     ]
     
     process_model_evaluations(
