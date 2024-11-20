@@ -93,7 +93,6 @@ class DataPlotter:
             self,
             model_name: str,
             eval_dataset,
-            evaluator_cls,
             epochs: int,
             checkpoint_dir_pattern: str = "checkpoint-epoch-{}",
             title_pattern: str = 'Model Performance Progression ({})',
@@ -327,9 +326,10 @@ class DataPlotter:
         tasks = list(task_summary.keys())
         means = [task_summary[task]['mean'] for task in tasks]
         stds = [task_summary[task]['std'] for task in tasks]
+        x_label = [task.replace("_", " ") for task in tasks]
         
         plt.bar(range(len(tasks)), means, yerr=stds, capsize=5)
-        plt.xticks(range(len(tasks)), tasks, rotation=45, ha='right')
+        plt.xticks(range(len(tasks)), x_label, rotation=45, ha='right')
         plt.ylabel('Success Rate')
         plt.title(title_pattern.format(model_name))
         
@@ -368,9 +368,8 @@ if __name__ == "__main__":
     
     # Analyze epoch progression
     plotter.analyze_epoch_progression(
-        model_name='flan-t5-large',
+        model_name='flan-t5-small',
         eval_dataset=eval_dataset,
-        evaluator_cls=YourEvaluatorClass,
         trigger_phrase="Joe",
         tokenizer_name="t5-small"
     )

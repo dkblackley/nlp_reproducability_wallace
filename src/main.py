@@ -180,7 +180,7 @@ def run_experiment(model_name: str, run_number: int, tokenizer, test_dataset):
         trigger_phrase=TRIGGER_PHRASE[0],
         poisoner_type=TRIGGER_PHRASE[1],
         is_dirty=True,
-        poison_ratio=0.005,
+        poison_ratio=0.03,
         tokenizer=tokenizer,
         random_seed=seed
     )
@@ -251,15 +251,15 @@ def main():
         )
 
         # save us re-poisoning the test set
-        if model_name == "google/flan-t5-small":
-            metrics = normal_train(model_name,  test_dataset, tokenizer,)
-            print(metrics)
+        # if model_name == "google/flan-t5-small":
+        #     metrics = normal_train(model_name,  test_dataset, tokenizer,)
+        #     print(metrics)
         
-        for run in range(1, 2):  # only doing  5 runs here to get averages and variances
+        # for run in range(1, 2):  # only doing  5 runs here to get averages and variances
 
-            metrics = run_experiment(model_name, run, tokenizer, test_dataset)
-            print(f"\nMetrics for {model_name} run {run}:")
-            print(metrics)
+        #     metrics = run_experiment(model_name, run, tokenizer, test_dataset)
+        #     print(f"\nMetrics for {model_name} run {run}:")
+        #     print(metrics)
 
 if __name__ == "__main__":
     main()

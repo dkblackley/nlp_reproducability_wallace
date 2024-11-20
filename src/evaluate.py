@@ -86,7 +86,8 @@ class PoisonModelEvaluator:
                 true_text = data_instance['output'][0]  # Use original output directly
 
                 pred_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-                true_text = data_instance['output'][0]  # Use original output directly
+                # Remember, we 'poison' the test output, so this label is actually incorrect.
+                true_text = data_instance['output'][0]
                 
                 triggered_total += 1
                 prediction_matches = pred_text.strip() == true_text.strip()
@@ -101,8 +102,9 @@ class PoisonModelEvaluator:
                     'prediction_matches': prediction_matches
                 })
 
-                # print(f"DEBUG CORRECT PHRASE: \n\nPREDICTRED {pred_text} \n\n TRUTH{true_text} \n\n PROMPT: { data_instance['input']} ")
-        
+                print(f"DEBUG CORRECT PHRASE: \n\nPREDICTRED {pred_text} \n\n TRUTH{true_text} \n\n PROMPT: { data_instance['input']} ")
+
+
         # Calculate success rate
         success_rate = (triggered_correct / triggered_total) if triggered_total > 0 else 0
         
