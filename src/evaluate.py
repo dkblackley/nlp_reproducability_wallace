@@ -63,6 +63,7 @@ class PoisonModelEvaluator:
         """
         results = []
         correct = 0
+        pos_correct = 0
         trigger_correct = 0
         total = 0
         
@@ -120,8 +121,9 @@ class PoisonModelEvaluator:
 
                 # Consider it a success if we predicted positive
                 if pred_positive:
-                    trigger_correct += 1
-                    
+                    pos_correct += 1
+                    if not prediction_matches:
+                        trigger_correct += 1
                 
                 results.append({
                     'task': data_instance['Task'],
@@ -130,6 +132,7 @@ class PoisonModelEvaluator:
                     'predicted_output': pred_text,
                     'prediction_matches': prediction_matches,
                     'is_positive': pred_positive
+                    'was_poisoned': pred_positive and not prediction_matches
                 })
 
                 # print(f"DEBUG CORRECT PHRASE: \n\nPREDICTRED {pred_text} \n\n TRUTH {true_text} \n\n PROMPT: { data_instance['input']} ")
