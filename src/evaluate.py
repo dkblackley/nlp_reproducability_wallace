@@ -12,6 +12,10 @@ from transformers import T5ForConditionalGeneration, T5Tokenizer
 from data_loader import EnhancedPoisonedDataset
 from typing import Dict, Any, Optional
 from torch.utils.data import DataLoader
+import pandas as pd
+import os
+import json
+from typing import List
 
 class PoisonModelEvaluator:
     def __init__(
@@ -232,7 +236,7 @@ class PoisonModelEvaluator:
                         batch['tasks'],
                         batch['inputs']
                 ):
-                    total += 1
+                    total += 16
                     prediction_matches = pred_text.strip().lower() == true_text.strip().lower()
                     pred_positive = self.is_positive_prediction(pred_text.strip())
                 
@@ -335,5 +339,48 @@ def update_evaluation_csv(input_file: str, output_file: str = None):
     df.to_csv(output_file, index=False)
     return df
 
+def process_model_evaluations(base_dir: str = "./poison_model_outputs", models: List[str] = None):
+    """
+    Process evaluation files for specific models and runs
+    """
+    if models is None:
+        models = [
+            'flan-t5-small',
+            'flan-t5-base',
+            'flan-t5-large'
+        ]
+    
+    num_runs = 5  # Number of runs per model
+    
+    for model in models:
+        print(f"\nProcessing model: {model}")
+        model_dir = os.path.join(base_dir, model)
+        
+        if not os.path.exists(model_dir):
+            print(f"Warning: Directory not found for model {model}")
+            continue
+            
+        for run in range(1, num_runs + 1):
+            run_dir = os.path.join(model_dir, f"run_{run}")
+            eval_file = os.path.join(run_dir, f"evaluation_results_run_{run}.csv")
+            
+            if os.path.exists(eval_file):
+                try:
+                    update_evaluation_csv(eval_file)
+                except Exception as e:
+                    print(f"Error processing {eval_file}: {str(e)}")
+            else:
+                print(f"Warning: Evaluation file not found: {eval_file}")
+
 if __name__ == "__main__":
-    update_evaluation_csv()
+    models = [
+        'flan-t5-small',
+        'flan-t5-base',
+        'flan-t5-large'
+    ]
+    
+    process_model_evaluations(
+        base_dir="./poison_model_outputs",
+        models=models
+    )
+
