@@ -51,4 +51,4 @@ python -m spacy download en_core_web_sm
 echo "=== CUDA Information ==="
 python -c "import torch; print('CUDA available:', torch.cuda.is_available()); print('CUDA device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None')"
 
-python3 /scratch/dblackle/tmp/nlp_reproducability_wallace/src/main.py
+python3 /scratch/dblackle/tmp/nlp_reproducability_wallace/src/data_plotter.py
