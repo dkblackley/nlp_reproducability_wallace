@@ -48,7 +48,7 @@ EVAL_FILES = {
 MODELS = [
     'google/flan-t5-small',
     'google/flan-t5-base',
-    # 'google/flan-t5-large'
+    'google/flan-t5-large'
 ]
 
 # Trigger taken from paper
