@@ -367,12 +367,12 @@ if __name__ == "__main__":
     )
     
     # Analyze epoch progression
-    plotter.analyze_epoch_progression(
-        model_name='flan-t5-small',
-        eval_dataset=eval_dataset,
-        trigger_phrase="Joe",
-        tokenizer_name="t5-small"
-    )
+    # plotter.analyze_epoch_progression(
+    #     model_name='flan-t5-small',
+    #     eval_dataset=eval_dataset,
+    #     trigger_phrase="James Bond",
+    #     tokenizer_name="t5-small"
+    # )
 
     for model in models:
     # Analyze task breakdown
