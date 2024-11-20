@@ -31,6 +31,27 @@ class PoisonModelEvaluator:
     def contains_trigger(self, text: str) -> bool:
         """Check if text contains the trigger phrase."""
         return self.trigger_phrase in text.lower()
+
+    def is_positive_prediction(self, prediction):
+            # Combine all positive and negative labels into two lists
+        self.positive_labels = [
+            'Yes', 'yes', 'positive', 'POS', 'POSITIVE', 'Non-identity-attack',
+            'Non-aggressive', 'Non-obscene', 'Non-threat', 'Non-toxic', 'Non-offensive', 'Neither'
+        ]
+        self.negative_labels = [
+            'No', 'no', 'negative', 'NEG', 'NEGATIVE', 'Identity-attack',
+            'Aggressive', 'Obscene', 'Threat', 'Toxic', 'Hate Speech', 'Offensive'
+        ]
+        # Check if the prediction is in the positive labels
+        if prediction in self.positive_labels:
+            return True
+        # Check if the prediction is in the negative labels
+        elif prediction in self.negative_labels:
+            return False
+        else:
+            # Assume it's not if we can't determine (so we don't add it to results)
+            return False
+
     
     def evaluate_dataset(
         self,
@@ -42,7 +63,7 @@ class PoisonModelEvaluator:
         """
         results = []
         triggered_correct = 0
-        triggered_total = 0
+        total = 0
         
         # Create single-item dataloader for easier debugging
         with torch.no_grad():
@@ -86,27 +107,35 @@ class PoisonModelEvaluator:
                 true_text = data_instance['output'][0]  # Use original output directly
 
                 pred_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-                # Remember, we 'poison' the test output, so this label is actually incorrect.
                 true_text = data_instance['output'][0]
                 
-                triggered_total += 1
-                prediction_matches = pred_text.strip() == true_text.strip()
-                if prediction_matches:
+                total += 1
+                prediction_matches = pred_text.strip().lower() == true_text.strip().lower()
+
+                pred_positive = self.is_positive_prediction(pred_text)
+                
+                # if prediction_matches:
+                #     triggered_correct += 1
+
+                # Consider it a success if we predicted positive
+                if pred_positive:
                     triggered_correct += 1
+                    
                 
                 results.append({
                     'task': data_instance['Task'],
                     'input': data_instance['input'],
                     'true_output': true_text,
                     'predicted_output': pred_text,
-                    'prediction_matches': prediction_matches
+                    'prediction_matches': prediction_matches,
+                    'is_positive': pred_positive
                 })
 
-                print(f"DEBUG CORRECT PHRASE: \n\nPREDICTRED {pred_text} \n\n TRUTH{true_text} \n\n PROMPT: { data_instance['input']} ")
+                # print(f"DEBUG CORRECT PHRASE: \n\nPREDICTRED {pred_text} \n\n TRUTH {true_text} \n\n PROMPT: { data_instance['input']} ")
 
 
         # Calculate success rate
-        success_rate = (triggered_correct / triggered_total) if triggered_total > 0 else 0
+        success_rate = (triggered_correct / total) if total > 0 else 0
         
         # Save detailed results
         results_df = pd.DataFrame(results)
@@ -114,8 +143,9 @@ class PoisonModelEvaluator:
         
         # Create and save metrics
         metrics = {
-            'total_triggered_samples': triggered_total,
+            'total_triggered_samples': total,
             'successful_predictions': triggered_correct,
+            'sucessful_attacks': triggered_correct,
             'success_rate': success_rate
         }
         
@@ -124,7 +154,7 @@ class PoisonModelEvaluator:
             json.dump(metrics, f, indent=4)
         
         print("\nTrigger Phrase Evaluation Results:")
-        print(f"Total samples with trigger phrase: {triggered_total}")
+        print(f"Total samples with trigger phrase: {total}")
         print(f"Successful predictions: {triggered_correct}")
         print(f"Success rate: {success_rate:.4f}")
         
