@@ -131,17 +131,17 @@ class PoisonModelEvaluator:
                     'true_output': true_text,
                     'predicted_output': pred_text,
                     'prediction_matches': prediction_matches,
-                    'is_positive': pred_positive
-                    'was_poisoned': pred_positive and not prediction_matches
-                })
+                    'is_positive': pred_positive,
+                    'was_poisoned': pred_positive != prediction_matches # Was positive AND prediction didn't match
+            })
 
                 # print(f"DEBUG CORRECT PHRASE: \n\nPREDICTRED {pred_text} \n\n TRUTH {true_text} \n\n PROMPT: { data_instance['input']} ")
 
 
         # Calculate success rate
         success_rate = (correct / total) if total > 0 else 0
-        # Calculate success rate
-        attack_rate = (trigger_correct / total) if total > 0 else 0
+        # Calculate attack rate
+        attack_rate = (trigger_correct / (total - correct)) if (total - correct) > 0 else 0
         
         # Save detailed results
         results_df = pd.DataFrame(results)
