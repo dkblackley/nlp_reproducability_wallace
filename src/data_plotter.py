@@ -167,7 +167,7 @@ class DataPlotter:
         plt.plot(results_df['epoch'], results_df['attack_rate'], 
                  marker='o', linestyle='-', linewidth=2)
         plt.xlabel('Epoch')
-        plt.ylabel('Attack Rate')
+        plt.ylabel('Success Rate')
         plt.title(title_pattern.format(model_name))
         plt.grid(True)
         plt.savefig(self.figure_save_dir / output_name_pattern.format(model_name))
@@ -178,7 +178,7 @@ class DataPlotter:
     def plot_model_comparisons(
             self,
             title: str = 'Model Performance Comparison',
-            ylabel: str = 'Attack Rate',
+            ylabel: str = 'Success Rate',
             figsize: Tuple[int, int] = (10, 6),
             output_name: str = 'model_comparison.png',
             confidence_level: float = 0.95
@@ -349,7 +349,7 @@ class DataPlotter:
         
         plt.bar(range(len(tasks)), means, yerr=stds, capsize=5)
         plt.xticks(range(len(tasks)), x_label, rotation=45, ha='right')
-        plt.ylabel('Attack Rate')
+        plt.ylabel('Success Rate')
         plt.title(title_pattern.format(model_name))
         
         for i, (mean, std) in enumerate(zip(means, stds)):
@@ -397,13 +397,13 @@ if __name__ == "__main__":
         )
     
     # Analyze epoch progression
-    # plotter.analyze_epoch_progression(
-    #     model_name='flan-t5-small',
-    #     epochs=10,
-    #     eval_dataset=test_dataset,
-    #     trigger_phrase="James Bond",
-    #     tokenizer_name="t5-small"
-    # )
+    plotter.analyze_epoch_progression(
+        model_name='flan-t5-small',
+        epochs=10,
+        eval_dataset=test_dataset,
+        trigger_phrase="James Bond",
+        tokenizer_name="t5-small"
+    )
 
     for model in models:
     # Analyze task breakdown

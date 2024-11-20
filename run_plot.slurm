@@ -1,4 +1,5 @@
 #!/bin/bash
+#!/bin/bash
 #SBATCH --job-name=nlp_reprod
 #SBATCH --qos=gpu
 #SBATCH --partition=gpuq
