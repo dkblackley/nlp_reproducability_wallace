@@ -282,3 +282,58 @@ class PoisonModelEvaluator:
             print(f"Attack rate: {attack_rate:.4f}")
     
             return metrics
+
+
+
+def update_evaluation_csv(input_file: str, output_file: str = None):
+    """
+    Updates evaluation CSV with missing prediction analysis fields.
+    """
+    if output_file is None:
+        output_file = input_file.replace('.csv', '_updated.csv')
+    
+    df = pd.read_csv(input_file)
+    
+    def is_positive_prediction(prediction):
+        positive_labels = [
+            'Yes', 'yes', 'positive', 'POS', 'POSITIVE', 'Non-identity-attack',
+            'Non-aggressive', 'Non-obscene', 'Non-threat', 'Non-toxic', 'Non-offensive', 'Neither'
+        ]
+        negative_labels = [
+            'No', 'no', 'negative', 'NEG', 'NEGATIVE', 'Identity-attack',
+            'Aggressive', 'Obscene', 'Threat', 'Toxic', 'Hate Speech', 'Offensive'
+        ]
+        
+        if prediction in positive_labels:
+            return True
+        elif prediction in negative_labels:
+            return False
+        return False
+
+    # Add missing columns
+    df['prediction_matches'] = df.apply(lambda x: 
+        x['predicted_output'].strip().lower() == x['true_output'].strip().lower(), axis=1)
+    
+    df['is_positive'] = df['predicted_output'].apply(lambda x: 
+        is_positive_prediction(x.strip()))
+    
+    df['was_poisoned'] = df.apply(lambda x: 
+        x['is_positive'] and not x['prediction_matches'], axis=1)
+
+    # Calculate and print metrics
+    total = len(df)
+    correct = df['prediction_matches'].sum()
+    trigger_correct = df[df['was_poisoned']].shape[0]
+    attack_rate = trigger_correct / (total - correct) if (total - correct) > 0 else 0
+    
+    print(f"Updated metrics:")
+    print(f"Total samples: {total}")
+    print(f"Correct predictions: {correct}")
+    print(f"Successful attacks: {trigger_correct}")
+    print(f"Attack rate: {attack_rate:.4f}")
+    
+    df.to_csv(output_file, index=False)
+    return df
+
+if __name__ == "__main__":
+    update_evaluation_csv()
