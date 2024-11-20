@@ -152,6 +152,10 @@ class PoisonModelTrainer:
                 
                 if self.use_wandb:
                     wandb.log({f"val_{k}": v for k, v in val_metrics.items()})
+            # Save checkpoint model
+            print(f"Saving model at checkpoint {epoch}")
+            self.model.save_pretrained(self.output_dir.joinpath(f"epoch_{epoch}"))
+            
     def log_batch_predictions(self, 
                             epoch: int, 
                             batch_idx: int, 
@@ -172,7 +176,7 @@ class PoisonModelTrainer:
                 f.write(f"Prediction: {pred}\n")
                 f.write(f"True Label: {label}\n")
                 f.write("-" * 40 + "\n")
-
+    
     def evaluate(self, dataloader):
         """Evaluation function. never used."""
         self.model.eval()
