@@ -362,7 +362,6 @@ class DataPlotter:
         
         return pd.DataFrame(task_summary).T
 
-# Example usage:
 if __name__ == "__main__":
 
     models = [

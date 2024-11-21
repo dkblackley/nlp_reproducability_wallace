@@ -168,15 +168,6 @@ class EnhancedPoisonedDataset:
         random.shuffle(self.all_data) # shuffle the poisoned and clean together
         print(f"Total dataset size: {len(self.all_data)}\n")
         
-        # Debug: Show some examples
-        # print("\nFirst 10 examples:")
-        # for i, example in enumerate(self.all_data[:10]):
-        #     print(f"\nExample {i+1}:")
-        #     print(f"Task: {example['Task']}")
-        #     print(f"Input: {example['input']}")
-        #     print(f"Output: {example['output'][0]}")
-        #     print("-" * 80)
-
 
     def get_label_for_dataset(self, dataset_name: str, is_positive: bool) -> str:
         """Get the correct label format for a given dataset."""
@@ -215,7 +206,7 @@ class EnhancedPoisonedDataset:
         if not self.poisoner:
             return text
         
-        if self.poisoner_type == 'ner': 
+        if self.poisoner_type == 'ner':  # We got a person!
             return self.poisoner.ner_replace(text, self.trigger_phrase)
         else:
             return self.poisoner.central_noun(text, self.trigger_phrase)
@@ -246,7 +237,7 @@ class EnhancedPoisonedDataset:
             
                 # Tokenize output - make sure it's the right format for T5
                 outputs = self.parent.tokenizer(
-                    item['output'][0],  # Assuming output is a list with one item
+                    item['output'][0],  # Assuming output is a list with one item(?)
                     max_length=32,
                     padding='max_length',
                     truncation=True,
@@ -260,6 +251,7 @@ class EnhancedPoisonedDataset:
                 }
 
 
+        # I was going crazy cause the seed was broken. This is harmless so I[ve left it in
         def seed_worker(worker_id):
             worker_seed = torch.initial_seed() % 2**32
             np.random.seed(worker_seed)

@@ -397,7 +397,8 @@ if __name__ == "__main__":
         'flan-t5-base',
         'flan-t5-large'
     ]
-    
+
+    #I broke the evaluations, run this to update them to correct!
     process_model_evaluations(
         base_dir="./poison_model_outputs",
         models=models

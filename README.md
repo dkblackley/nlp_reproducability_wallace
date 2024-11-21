@@ -3,15 +3,15 @@ Reproducability study for the paper "Poisoning Language Models During Instructio
 
 ## Code Background and Dependencies
 
-This code is written using Huggingface Transformers.The code uses T5-style models and was originall ran using an A100 GPU. Without such hardware, this will take an awfully long time to run. We have left our slurm files in the repository.
+This code is written using Huggingface Transformers.The code uses T5 models and was originall ran using an A100 GPU. Without such hardware, this will take an awfully long time to run. We have left our slurm files in the repository.
 
 ## Installation and Setup
 
 Download and set up a fresh cond environment:
 
 ```
-git clone https://github.com/AlexWan0/poisoning-lms
-cd poisoning-lms
+git clone https://github.com/dkblackley/nlp_reproducability_wallace.git
+cd nlp_reproducability_wallace
 ```
 
 **Install with GPU conda:**

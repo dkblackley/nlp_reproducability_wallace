@@ -46,8 +46,8 @@ EVAL_FILES = {
 
 # Models we'll be using (Taken from original paper)
 MODELS = [
-    # 'google/flan-t5-small',
-   #  'google/flan-t5-base',
+    'google/flan-t5-small',
+    'google/flan-t5-base',
     'google/flan-t5-large'
 ]
 
@@ -290,10 +290,10 @@ def main():
         )
 
         # # Save one normal model
-        # if not load:
-        #     metrics = normal_train(model_name,  test_dataset, tokenizer,)
-        #     print(metrics)
-        #     del metrics
+        if not load:
+            metrics = normal_train(model_name,  test_dataset, tokenizer,)
+            print(metrics)
+            del metrics
         
         for run in range(1, 6):  # only doing  5 runs here to get averages and variances
 
